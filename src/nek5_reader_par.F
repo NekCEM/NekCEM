@@ -20,13 +20,13 @@ c
 
       call usrdat0
 
-      call read_re2_hdr(ifbswap)
+      call read_re2_hdr(ifbswap, .true.)
 
       call chkParam
 
       call mapelpr  ! read .map file, est. gllnid, etc.
 
-      call read_re2_data(ifbswap)
+      call read_re2_data(ifbswap, .true., .true., .true.)
 
       call nekgsync()
 
@@ -41,7 +41,7 @@ C
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
 
-      loglevel = 1
+      loglevel = 2
       optlevel = 1
 
       call rzero(param,200)
@@ -120,10 +120,7 @@ C
          ifadvc(i+1) = .true.  
       enddo 
 
-      iffilter(1) = .false.  
-      do i=1,ldimt
-         iffilter(i+1) = .false.  
-      enddo 
+      iffilter = .false.  
 
       ifdgfld(0) = .false. 
       ifdgfld(1) = .false. 
@@ -145,11 +142,9 @@ C
          idpss(i) = -1
       enddo 
 
-      ifprojfld(0) = .false. 
-      ifprojfld(1) = .false. 
-      do i=1,ldimt
-         ifprojfld(1+i) = .false.
-      enddo
+      meshPartitioner=3 ! HYBRID (RSB+RCB)
+
+      ifprojfld = .false. 
 
       ifflow    = .false.
       ifheat    = .false.  
@@ -210,7 +205,6 @@ c     - mhd support
 
       INCLUDE 'SIZE'
       INCLUDE 'INPUT'
-      INCLUDE 'ADJOINT'
       INCLUDE 'RESTART'
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
@@ -387,8 +381,8 @@ c set parameters
       endif
       call finiparser_getBool(i_out,trim(txt)//':residualProj',ifnd)
       if (ifnd .eq. 1) then
-         ifprojfld(i+1) = .false.
-         if(i_out .eq. 1) ifprojfld(i+1) = .true.
+         ifprojfld = .false.
+         if(i_out .eq. 1) ifprojfld = .true.
       endif
  
       enddo
@@ -478,8 +472,8 @@ c set parameters
 
       call finiparser_getBool(i_out,'velocity:residualProj',ifnd)
       if(ifnd .eq. 1) then
-        ifprojfld(1) = .false.
-        if(i_out .eq. 1) ifprojfld(1) = .true. 
+        ifprojfld = .false.
+        if(i_out .eq. 1) ifprojfld = .true. 
       endif
 
       call finiparser_getBool(i_out,'pressure:residualProj',ifnd)
@@ -501,10 +495,10 @@ c        stabilization type: none, explicit or hpfrt
             goto 101
          else if (index(c_out,'EXPLICIT') .eq. 1) then
             filterType = 1
-            call ltrue(iffilter,size(iffilter))
+            iffilter = .true.
          else if (index(c_out,'HPFRT') .eq. 1) then
             filterType = 2
-            call ltrue(iffilter,size(iffilter))
+            iffilter = .true.
          else
            write(6,*) 'value: ',c_out
            write(6,*) 'is invalid for general:filtering!'
@@ -607,8 +601,8 @@ c set logical flags
           if (ifnd .eq. 1) param(47) = d_out
           call finiparser_getBool(i_out,'mesh:residualProj',ifnd)
           if (ifnd .eq. 1) then
-             ifprojfld(0) = .false.
-             if(i_out .eq. 1) ifprojfld(0) = .true. 
+             ifprojfld = .false.
+             if(i_out .eq. 1) ifprojfld = .true. 
           endif
         else if (index(c_out,'USER') .eq. 1) then
           ifmvbd = .true.
@@ -822,6 +816,18 @@ c set restart options
          if(index(initc(i),'0') .eq. 1) call blank(initc(i),132)
       enddo
 
+c set partitioner options
+      call finiparser_getString(c_out,'mesh:partitioner',ifnd)
+      call capit(c_out,132)
+      if(index(c_out,'RSB').eq.1) then
+         meshPartitioner=1
+      else if (index(c_out,'RCBRSB').eq.1) then
+         meshPartitioner=3
+      else if(index(c_out,'RCB').eq.1) then
+         meshPartitioner=2
+      else if (index(c_out,'METIS').eq.1) then
+         meshPartitioner=4
+      endif
 
 100   if(ierr.eq.0) call finiparser_dump()
       return
@@ -843,8 +849,6 @@ C
       INCLUDE 'RESTART'
       INCLUDE 'PARALLEL'
       INCLUDE 'CTIMER'
-      INCLUDE 'ADJOINT'
-      INCLUDE 'CVODE'
 
       call bcast(loglevel, isize)
       call bcast(optlevel, isize)
@@ -882,6 +886,9 @@ C
       call bcast(iffilter, ldimt1*lsize)
 
       call bcast(idpss    ,  ldimt*isize)
+
+      call bcast(meshPartitioner,isize)
+
       call bcast(iftmsh   , (ldimt1+1)*lsize)
       call bcast(ifprojfld, (ldimt1+1)*lsize)
 
@@ -1052,7 +1059,7 @@ c
       endif
 
       if (lgmres.lt.5 .and. param(42).eq.0) then
-         if(nid.eq.0) write(6,*)
+         if(nid.eq.0 .and. loglevel .gt. 1) write(6,*)
      $   'WARNING: lgmres might be too low!'
       endif
 
@@ -1146,9 +1153,6 @@ c
      $    'for PN/PN-2$'
         call exitt
       endif
-
-      if (ifchar.and.(nelgv.ne.nelgt)) call exitti(
-     $ 'ABORT: Characteristics not supported w/ conj. ht transfer$',1)
 
       if (param(99).gt.-1 .and. (lxd.lt.lx1 .or. lyd.lt.ly1 .or.
      &   lzd.lt.lz1)) then

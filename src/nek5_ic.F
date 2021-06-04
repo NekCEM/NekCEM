@@ -526,3 +526,35 @@ c    $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
       return
       end
 c-----------------------------------------------------------------------
+      subroutine addfid(fname,fid)
+      include 'SIZE'
+      include 'TSTEP'
+      include 'INPUT'
+      include 'RESTART'
+
+
+      character*1 fname(132)
+      integer fid
+
+      character*8  eight,fmt,s8
+      save         eight
+      data         eight / "????????" /
+
+      do ipass=1,2      ! 2nd pass, in case 1 file/directory
+         do k=8,1,-1
+            i1 = indx1(fname,eight,k)
+            if (i1.ne.0) then ! found k??? string
+               write(fmt,1) k,k
+    1          format('(i',i1,'.',i1,')')
+               write(s8,fmt) fid
+               call chcopy(fname(i1),s8,k)
+               goto 10
+            endif
+         enddo
+   10    continue
+      enddo
+      
+      return
+      end
+c-----------------------------------------------------------------------
+

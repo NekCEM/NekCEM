@@ -775,3 +775,45 @@ c
 c      return
 c      end
 c-----------------------------------------------------------------------
+
+c-----------------------------------------------------------------------
+      subroutine crecv2(mtype,buf,lenm,jnid)
+      include 'mpif.h'
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
+      integer status(mpi_status_size)
+C
+      real*4 buf(1)
+      len = lenm
+
+      call mpi_recv (buf,len,mpi_byte
+     $              ,jnid,mtype,nekcomm,status,ierr)
+c
+      if (len.gt.lenm) then
+          write(6,*) nid,'long message in mpi_crecv:',len,lenm
+          call exitt
+      endif
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine crecv3(mtype,buf,len,lenm)
+      include 'mpif.h'
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
+      integer status(mpi_status_size)
+C
+      real*4 buf(1)
+      len = lenm
+      jnid = mpi_any_source
+
+      call mpi_recv (buf,len,mpi_byte
+     $            ,jnid,mtype,nekcomm,status,ierr)
+      call mpi_get_count (status,mpi_byte,len,ierr)
+c
+      if (len.gt.lenm) then
+          write(6,*) nid,'long message in mpi_crecv:',len,lenm
+          call exitt
+      endif
+c
+      return
+      end
+c-----------------------------------------------------------------------

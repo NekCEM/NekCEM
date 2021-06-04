@@ -73,19 +73,27 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,CPGRP(-5:10,LDIMT1,3)
      $               ,QINTEG(LDIMT3,MAXOBJ)
       real  param,rstim,vnekton,cpfld,cpgrp,qinteg
+     $     ,uparam(20)
+     $     ,restol(0:LDIMT1)
+     $     ,atol(0:LDIMT1)
+     $     ,fem_amg_param(15)
+     $     ,crs_param(15)
+     $     ,filterType
 
       COMMON /INPUT2/ MATYPE(-5:10,LDIMT1)
      $               ,NKTONV,NHIS,LOCHIS(4,lhis)
      $               ,IPSCAL,NPSCAL,IPSCO, ifldmhd
      $               ,IRSTV,IRSTT,IRSTIM,NMEMBER(MAXOBJ),NOBJ
-     $               ,NGEOM
+     $               ,IDPSS,NGEOM
       integer matype,nktonv,nhis,lochis,ipscal,npscal,ipsco,ifldmhd
-      integer irstv,irstt,irstim,nmember,nobj,ngeom
+      integer irstv,irstt,irstim,nmember,nobj,ngeom,idpss(ldimt)
 
       COMMON /INPUT3/ IF3D
      $               ,IFDG,IFSE,IFHEX,IFTET
+     $               ,IFDGFLD,IFDIFF,IFDEAL
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
-     $               ,IFMGRID,IFADVC(LDIMT1),IFTMSH(0:LDIMT1)
+     $               ,IFMGRID,IFADVC(LDIMT1)
+     $               ,IFTMSH(0:LDIMT1)
      $               ,IFMVBD,IFCHAR,IFNONL(LDIMT1)
      $               ,IFVARP(LDIMT1),IFPSCO(LDIMT1),IFVPS
      $               ,IFMODEL,IFKEPS
@@ -95,9 +103,12 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,IFANLS,IFANL2,IFMHD,IFESSR,IFPERT,IFBASE
      $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFSCHCLOB,IFUSERVP 
      $               ,IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO 
+     $               ,IFCVFLD,IFDP0DT
      $               ,ifxyo_,ifaziv,ifneknek,ifneknekm,ifneknekc
+     $               ,ifmpiio
       LOGICAL         IF3D
      $               ,IFDG,IFSE,IFHEX,IFTET
+     $               ,IFDGFLD(0:LDIMT1),IFDIFF(LDIMT1),IFDEAL(LDIMT1)
      $               ,IFFLOW,IFHEAT,IFTRAN,IFAXIS,IFSTRS,IFSPLIT
      $               ,IFMGRID,IFADVC,IFTMSH
      $               ,IFMVBD,IFCHAR,IFNONL
@@ -109,7 +120,9 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,IFANLS,IFANL2,IFMHD,IFESSR,IFPERT,IFBASE
      $               ,IFCVODE,IFLOMACH,IFEXPLVIS,IFSCHCLOB,IFUSERVP
      $               ,IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO 
+     $               ,IFCVFLD(LDIMT1),IFDP0DT
      $               ,ifxyo_,ifaziv,ifneknek,ifneknekm,ifneknekc
+     $               ,ifmpiio
       LOGICAL         IFNAV        
       EQUIVALENCE    (IFNAV, IFADVC(1))
 
