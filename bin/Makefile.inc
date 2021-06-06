@@ -8,6 +8,7 @@
 ?JLBASE?
 ?APP?
 ?USR?
+?USR_LFLAGS?
 
 BINNAME=nekcem
 APPSRC = $(shell find $(NEKBASE) -name cem_$(APP)*.F)
@@ -44,7 +45,7 @@ obj/%.o: $(JLBASE)/%.c
 
 all: usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ)
 	$(LD) -o nekcem $(APPOBJ) $(FOBJ) $(COBJ) $(JLOBJ) $(USROBJ) \
-			$(COMMOBJ) $(LDFLAGS)
+			$(COMMOBJ) $(LDFLAGS) $(USR_LFLAGS)
 	@if test -f ${BINNAME}; then \
         echo ""; \
         echo "$(NEK_WARN)"; \

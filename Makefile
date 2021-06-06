@@ -10,6 +10,7 @@ install:
 	@mkdir -p $(DESTDIR)$(prefix)/NekCEM
 	@cp -r src $(DESTDIR)$(prefix)/NekCEM
 	@cp -r bin $(DESTDIR)$(prefix)/NekCEM
+	@cp -r 3rd_party $(DESTDIR)$(prefix)/NekCEM
 	@mkdir -p $(DESTDIR)$(bindir)
 	@ln -s $(DESTDIR)$(prefix)/NekCEM/bin/configurenek $(DESTDIR)$(bindir)/configurenek
 	@ln -s $(DESTDIR)$(prefix)/NekCEM/bin/nek $(DESTDIR)$(bindir)/nek

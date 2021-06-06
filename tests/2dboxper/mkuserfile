@@ -137,18 +137,18 @@ c automatically added by makenek
 _ACEOF
 fi
 
-if ! cat $CASENAME.f | grep -qi "subroutine.*userqtl" ; then
-cat >> $CASENAME.f << _ACEOF
+#if ! cat $CASENAME.f | grep -qi "subroutine.*userqtl" ; then
+#cat >> $CASENAME.f << _ACEOF
 
-c automatically added by makenek
-      subroutine userqtl
+#c automatically added by makenek
+#      subroutine userqtl
 
-      call userqtl_scig
+#      call userqtl_scig
 
-      return
-      end
-_ACEOF
-fi
+#      return
+#      end
+#_ACEOF
+#fi
 
 if [ $CVODE -ne 0 ]; then
 
