@@ -334,12 +334,21 @@ c
       INCLUDE 'PARALLEL'
       INCLUDE 'ZPER'
 
-      logical ifbswap, ifre2
+      logical ifbswap, ifre2, parfound
       character*132 string
       real*8 etime_tmp
       integer idum(3*numsts+3)
 
       ierr = 0
+
+      ! check if new rea file version exists
+      if(nid.eq.0) inquire(file=parfle, exist=parfound)
+      call bcast(parfound,lsize)
+      if (parfound) then
+         if(nio.eq.0) write(6,'(A,A)') ' Reading ', parfle
+         call readat_par
+         goto 99
+      endif  
 
 c     Test timer accuracy
       edif = 0.0
@@ -452,7 +461,7 @@ c     suffice for now.   5/6/10
 c     if (ifchar.and.(nelgv.ne.nelgt)) call exitti(
 c    $ 'ABORT: IFCHAR curr. not supported w/ conj. ht transfer$',nelgv)
 
-      return
+ 99   return
       END
 
 c-----------------------------------------------------------------------

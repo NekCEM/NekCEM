@@ -204,6 +204,7 @@ c     - separate settings for tol, proj, dealiasing for ps
 c     - mhd support
 
       INCLUDE 'SIZE'
+      INCLUDE 'EMWAVE'
       INCLUDE 'INPUT'
       INCLUDE 'RESTART'
       INCLUDE 'PARALLEL'
@@ -555,6 +556,8 @@ c set logical flags
            param(27) = 2 
         else if (index(c_out,'BDF3') .eq. 1) then
            param(27) = 3 
+        else if (index(c_out,'RK54') .eq. 1) then
+           param(27) = 4
         else
            write(6,*) 'value: ',trim(c_out)
            write(6,*) 'is invalid for general:timeStepper!'
@@ -828,6 +831,13 @@ c set partitioner options
       else if (index(c_out,'METIS').eq.1) then
          meshPartitioner=4
       endif
+      
+c TODO: no error checking
+      call finiparser_getDbl(d_out,'electric:permittivity',ifnd)
+      if(ifnd .eq. 1) permittivity = d_out
+
+      call finiparser_getDbl(d_out,'magnetic:permeability',ifnd)
+      if(ifnd .eq. 1) permeability = d_out
 
 100   if(ierr.eq.0) call finiparser_dump()
       return
