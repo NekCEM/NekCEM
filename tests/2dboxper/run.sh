@@ -5,6 +5,7 @@ make install
 cd tests/2dboxper/
 rm -rf vtk/
 rm -rf obj/
-configurenek maxwell 2dboxper
+rm nekcem
+./setup maxwell 2dboxper
 make
 #./nekcem
