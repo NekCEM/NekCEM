@@ -725,7 +725,7 @@ c     Set default logicals
       ifflow = .false.
       ifmvbd = .false.
       ifheat = .false.
-      ifsplit = .false.
+      ifsplit = .true.
       ifdoit = .false.
       iftet = .false.
       ifhex = .false.
@@ -832,7 +832,7 @@ C------------------------------------------------------------------------
       integer ierr
 
       character ostring(132)
-      character(10) s10
+      character(30) s10
       integer iglsum,indx1,k,len
 
       ierr = iglsum(ierr,1)
