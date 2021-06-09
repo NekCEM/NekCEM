@@ -30,17 +30,15 @@
 
 #endif
 
-#define byte_reverse  FORTRAN_NAME(byte_reverse,  BYTE_REVERSE)
-#define byte_reverse8 FORTRAN_NAME(byte_reverse8, BYTE_REVERSE8)
-#define byte_open     FORTRAN_NAME(byte_open,     BYTE_OPEN   )
-#define byte_close    FORTRAN_NAME(byte_close,    BYTE_CLOSE  )
-#define byte_rewind   FORTRAN_NAME(byte_rewind,   BYTE_REWIND )
-#define byte_read     FORTRAN_NAME(byte_read,     BYTE_READ   )
-#define byte_write    FORTRAN_NAME(byte_write,    BYTE_WRITE  )
-#define set_bytesw_write FORTRAN_NAME(set_bytesw_write,SET_BYTESW_WRITE)
-#define set_bytesw_read  FORTRAN_NAME(set_bytesw_read ,SET_BYTESW_READ )
-#define get_bytesw_write FORTRAN_NAME(get_bytesw_write,GET_BYTESW_WRITE)
-#define get_bytesw_read  FORTRAN_NAME(get_bytesw_read ,GET_BYTESW_READ )
+#define byte_reverse     FORTRAN_NAME(byte_reverse,     BYTE_REVERSE    )
+#define byte_reverse8    FORTRAN_NAME(byte_reverse8,    BYTE_REVERSE8   )
+#define byte_open        FORTRAN_NAME(byte_open,        BYTE_OPEN       )
+#define byte_close       FORTRAN_NAME(byte_close,       BYTE_CLOSE      )
+#define byte_rewind      FORTRAN_NAME(byte_rewind,      BYTE_REWIND     )
+#define byte_read        FORTRAN_NAME(byte_read,        BYTE_READ       )
+#define byte_write       FORTRAN_NAME(byte_write,       BYTE_WRITE      )
+#define get_bytesw_write FORTRAN_NAME(get_bytesw_write, GET_BYTESW_WRITE)
+#define set_bytesw_write FORTRAN_NAME(set_bytesw_write, SET_BYTESW_WRITE)
 
 #define READ     1
 #define WRITE    2
@@ -58,9 +56,9 @@ int bytesw_read=0;
 /*************************************byte.c***********************************/
 
 #ifdef UNDERSCORE
-  void exitt_(int *);
+  void exitt_();
 #else
-  void exitt(int *);
+  void exitt();
 #endif
 
 void byte_reverse(float *buf, int *nn,int *ierr)
@@ -70,11 +68,11 @@ void byte_reverse(float *buf, int *nn,int *ierr)
 
   if (*nn<0)
   {
-    printf("byte_reverse() :: n must be positive\n");
+    printf("byte_reverse() :: n must be positive\n"); 
     *ierr=1;
     return;
   }
-
+  
   for (ptr=(char *)buf,n=*nn; n--; ptr+=4)
   {
      SWAP(ptr[0],ptr[3])
@@ -112,40 +110,29 @@ void byte_reverse8(float *buf, int *nn,int *ierr)
 }
 
 
-void byte_open(char *n,int *ierr)
+void byte_open(char *n,int *ierr,int nlen)
 {
   int  i,len,istat;
   char slash;
   char dirname[MAX_NAME+1];
 
-  len = strlen(n);
-
-  if (len<0)
+  if (nlen>MAX_NAME)
   {
-    printf("byte_open() :: file name has negative length!\n");
+    printf("byte_open() :: invalid string length\n"); 
     *ierr=1;
     return;
   }
+  strncpy(name,n,nlen);
+  for (i=nlen-1; i>0; i--) if (name[i] != ' ') break;
+  name[i+1] = '\0';
 
-  if (len>MAX_NAME)
-  {
-    printf("byte_open() :: file name too long!\n");
-    *ierr=1;
-    return;
+  for (i=nlen-1; i>0; i--) if (name[i] == '/') break;
+  if (i>0) {
+    strncpy(dirname,name,i);
+    dirname[i] = '\0';
+    istat = mkdir(dirname,0755);
   }
 
-  strcpy(name,n);
-  strcpy(dirname,n);
-
-  for (i=1;dirname[i]!='\0';i++)
-  {
-     if (i>0 && dirname[i]=='/')
-     {
-       slash = name[i];
-       dirname[i] = '\0';
-       istat = mkdir(dirname,0755);
-     }
-  }
   *ierr=0;
 }
 
@@ -179,7 +166,7 @@ void byte_write(float *buf, int *n,int *ierr)
 
   if (*n<0)
   {
-    printf("byte_write() :: n must be positive\n");
+    printf("byte_write() :: n must be positive\n"); 
     *ierr=1;
     return;
   }
@@ -188,7 +175,7 @@ void byte_write(float *buf, int *n,int *ierr)
   {
     if (!(fp=fopen(name,"wb")))
     {
-      printf("byte_write() :: fopen failure!\n");
+      printf("byte_write() :: fopen failure!\n"); 
       *ierr=1;
       return;
     }
@@ -203,7 +190,7 @@ void byte_write(float *buf, int *n,int *ierr)
     }
   else
   {
-      printf("byte_write() :: can't fwrite after freading!\n");
+      printf("byte_write() :: can't fwrite after freading!\n"); 
       *ierr=1;
       return;
   }
@@ -224,7 +211,7 @@ void byte_read(float *buf, int *n,int *ierr)
      if (!(fp=fopen(name,"rb")))
      {
         printf("%s\n",name);
-        printf("byte_read() :: fopen failure2!\n");
+        printf("byte_read() :: fopen failure2!\n"); 
         *ierr=1;
         return;
      }
@@ -252,7 +239,7 @@ void byte_read(float *buf, int *n,int *ierr)
   }
   else
   {
-     printf("byte_read() :: can't fread after fwriting!\n");
+     printf("byte_read() :: can't fread after fwriting!\n"); 
      *ierr=1;
      return;
   }

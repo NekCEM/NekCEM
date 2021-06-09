@@ -40,8 +40,8 @@ c     sane.
       ifbdf2 = .false.          ! BDF2 time stepping
       ifexp = .false.           ! exponential time stepping
       ifeig = .false.           ! eigenvalue solver
-
-      ifte = .false.            ! transeverse electric mode
+c TODO: default ifte = true
+      ifte = .true.            ! transeverse electric mode
       iftm = .false.            ! transverse magnetic mode
       ifinhom = .false.         ! inhomogeneous boundary
 

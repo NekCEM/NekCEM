@@ -21,8 +21,6 @@ writeInterval  =0
 [PROBLEMTYPE]
 equation = maxwell
 
-#mode = TM  (Hx,Hy,Ez) 2D     
-#mode = TE  (Ex,Ey,Hz) 2D
 #equation = poisson  
 #equation = drift    
 #model = drude
@@ -35,5 +33,3 @@ permittivity = 1
 
 [MAGNETIC]
 permeability=1
-
-

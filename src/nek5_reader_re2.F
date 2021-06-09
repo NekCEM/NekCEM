@@ -34,7 +34,7 @@ c-----------------------------------------------------------------------
 
       call blank(cbc,3*size(cbc))
       call rzero(bc ,size(bc))
-
+#if 0
 #ifndef NOMPIIO
       call fgslib_crystal_setup(cr_re2,nekcomm,np)
 
@@ -62,7 +62,18 @@ c-----------------------------------------------------------------------
 
       call byte_close(ierr)
 #endif
+#endif
+c TODO: no mpi io first
+      call byte_open(re2fle,ierr)
+      call byte_read(idummy,21,ierr) ! skip hdr+endian code 
 
+      call bin_rd1_mesh (ifbswap)
+      call bin_rd1_curve(ifbswap)
+      do ifield = ibc,nfldt
+         call bin_rd1_bc (cbc(1,1,ifield),bc(1,1,1,ifield),ifbswap)
+      enddo
+
+      call byte_close(ierr)
       etime_t = dnekclock_sync() - etime0
       if(nio.eq.0) write(6,'(A,1(1g9.2),A,/)')
      &                   ' done :: read .re2 file   ',

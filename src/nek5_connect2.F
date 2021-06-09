@@ -391,7 +391,10 @@ C     Read mesh info
       call bcast(h5mfle,132)
 
       ifre2 =.false.
-      if (nelgs.lt.0) ifre2 = .true.     ! use new .re2 reader
+      if (nelgs.lt.0) then 
+          write(6,*) '  Reading .re2'
+          ifre2 = .true.     ! use new .re2 reader
+      endif
 
       ifgtp =.false.
       if (ndim.lt.0)  ifgtp = .true.     ! domain is a global tensor product
