@@ -31,7 +31,7 @@ magnetic:permeability = [1]
  Number of processors:           1
  REAL    wdsize      :           8
  INTEGER wdsize      :           4
- Timer accuracy      : 1.00E-07
+ Timer accuracy      : 4.00E-07
   
    Mesh options: 
    ifhex =  T  (hexahedral)
@@ -47,13 +47,42 @@ magnetic:permeability = [1]
  T
   ifmap
  F
+ nlv     4
+ mdw     6
+ ndw  1134
  Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.ma2                                                                  
+ HDR: #v001           9           9           3           8          36           9           0                                           
+ HDR: #v001           9           9           3           8          36           9           0                                           
+ neli:     9
+ npass:     1
+ np:     1
+ eg0:     0
+ eg1:     9
+ nwds:    45
+ m     1
+           7           9           8           7           6           6
+ m     2
+           6           7           6           5           4           5
+ m     3
+           7           5           4           9           8           9
+ m     4
+           5           3           9           2           7           1
+ m     5
+           2           2           7           1           5           9
+ m     6
+           3           1           5           3           9           0
+ m     7
+           4           8           3           6           2           4
+ m     8
+           0           6           2           4           1           0
+ m     9
+           1           4           1           8           3           0
  done:: set_proc_map()
  RANK     0 IEG       1       2       3       4       5       6       7       8
                       9
  element load imbalance:            0           9           9
  done :: mapelpr, mapping elements to processors
- done :: read .re2 file    0.55E-04 sec
+ done :: read .re2 file    0.48E-04 sec
 
  iffilter     F
  ifpoisson    F
@@ -87,15 +116,15 @@ magnetic:permeability = [1]
    call usrsetvert
    done :: usrsetvert
 
-   setup_ds time 2.2300E-04 seconds   0  9         107           9
+   setup_ds time 3.8000E-04 seconds   0  9         107           9
  setup_dgds2:: init
    setvert2d:  11         135         864         135         135
    call usrsetvert
    done :: usrsetvert
 
- set_vert time:: 2.2000E-05 seconds 
-   gs_setup time:: 7.8000E-05 seconds 
- setup_dsdg2 time:: 1.0700E-04 seconds   1  9         135           9
+ set_vert time:: 1.0000E-04 seconds 
+   gs_setup time:: 1.4300E-04 seconds 
+ setup_dsdg2 time:: 2.5800E-04 seconds   1  9         135           9
  ifflow/ifheat/nfield F F           0
  ifield0/nfld           1           0
  Vol:   8999999.9999999907        8999999.9999999907     
@@ -1334,8 +1363,8 @@ magnetic:permeability = [1]
  start: cem_maxwell_materials
  done: cem_maxwell_materials
  nid=0: gs_op_fields: single vector   3.0000000000003982E-006 sec
- nid=0: gs_op_fields: multi  vector   2.9999999999995308E-006 sec
- gs_op_fields: chose multi vector 
+ nid=0: gs_op_fields: multi  vector   3.0000000000003982E-006 sec
+ gs_op_fields: chose single vector
  done: inverse mass matrix
  ============================
  ========  Begin Run ========
@@ -1345,8 +1374,8 @@ magnetic:permeability = [1]
          0     9   8      729 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: L2
          0     9   8      729 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: Linf
 
-         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 2.240E-01 7.428E-02 3.888E-02 0.000E+00 1.340E-04 1.84E-07 CPU: L2
-         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 1.191E+01 4.741E+00 7.439E-01 0.000E+00 1.340E-04 1.84E-07 CPU: Linf
+         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 2.240E-01 7.428E-02 3.888E-02 0.000E+00 1.320E-04 1.81E-07 CPU: L2
+         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 1.191E+01 4.741E+00 7.439E-01 0.000E+00 1.320E-04 1.81E-07 CPU: Linf
   
 call exitt: dying ...
   

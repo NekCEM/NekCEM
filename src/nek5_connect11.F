@@ -926,12 +926,229 @@ c-----------------------------------------------------------------------
       ierr = 0
 
       if (ifmap) then
-         call read_map(vertex, nlv, nel, suffix, ifgfdm)
+         call read_map(vertex, nlv, nel, '.map', ifgfdm)
       elseif (ifma2) then
-         call get_vert_ma2(nlv)
+c         call get_vert_ma2(nlv)
+         call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
       endif
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine read_ma2(vertex, nlv, nel, suffix, ifgfdm)
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      logical ifgfdm
+      common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
+      integer vertex(nlv,1)
+      character*4 suffix
+
+      parameter(mdw=2+2**ldim)
+      parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
+      common /scrns/ wk(mdw,ndw)   ! room for long ints, if desired
+      integer wk,e,eg,eg0,eg1
+
+      character*132 mapfle
+      character*1   mapfle1(132)
+      equivalence  (mapfle,mapfle1)
+
+      character*132 hdr
+      character*5   version
+      real*4        test
+      integer       itmp20(20)
+      logical ifbswap,if_byte_swap_test
+
+      iok = 0
+      if (nid.eq.0) then
+         lfname = ltrunc(reafle,132) - 4
+         call blank (mapfle,132)
+         call chcopy(mapfle,reafle,lfname)
+         call chcopy(mapfle1(lfname+1),suffix,4)
+c         open(unit=80,file=mapfle,status='old',err=99)
+c         read(80,*,err=99) neli,nnzi
+c         iok = 1
+         call byte_open(mapfle,iok)
+         if(iok.ne.0) goto 999
+
+         call blank(hdr,132)
+         call byte_read(hdr,132/4,iok)
+         if(iok.ne.0) goto 999
+
+         read (hdr,1) version,neli,nnzi
+    1    format(a5,2i12)
+         call byte_read(test,1,iok)
+         if(iok.ne.0) goto 999
+         ifbswap = if_byte_swap_test(test,iok)
+         if(iok.ne.0) goto 999
+      endif
+c   99 continue
+c      iok = iglmax(iok,1)
+c      if (iok.eq.0) goto 999     ! Mapfile not found
+
+      if (nid.eq.0) then
+         neli = iglmax(neli,1)   ! communicate to all procs
+      else
+         neli = 0
+         neli = iglmax(neli,1)   ! communicate neli to all procs
+      endif
+
+      npass = 1 + (neli/ndw)
+
+      if (npass.gt.np) then
+         if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
+         call exitt(1)
+      endif
+
+      len = 4*mdw*ndw
+      if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
+      call nekgsync
+
+      if (nid.eq.0) then
+         eg0 = 0
+         do ipass=1,npass
+            eg1 = min(eg0+ndw,neli)
+#if 0
+            m   = 0
+            do eg=eg0+1,eg1
+               m = m+1
+               read(80,*,end=998) (wk(k,m),k=2,mdw)
+               if(nid.eq.0) write(6,'(A,I5)') ' k ', k
+               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
+               if (.not.ifgfdm) gllnid(eg) = wk(2,m)  !proc map,  must still be divided
+               wk(1,m) = eg                           !eg=global node id
+               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
+               if(nid.eq.0) write(6,*) (wk(k,m),k=2,mdw)
+            !  write(6,*) (wk(k,m),k=1,mdw)
+            enddo
+#endif
+            nwds = (eg1 - eg0)*(mdw-1)
+            call byte_read(wk,nwds,iok)
+            if (iok.ne.0) goto 200
+            if (ifbswap) call byte_reverse(wk,nwds,iok)
+
+            m = eg1 - eg0
+            do eg=eg1,eg0+1,-1 ! reshuffle array
+               jj = (m-1)*(mdw-1) + 1
+               call icopy(itmp20,wk(jj,1),mdw-1)
+               call icopy(wk(1,m),itmp20 ,mdw-1)
+               m = m - 1
+               if (.not.ifgfdm) gllnid(eg) = wk(1,m)
+            enddo
+
+            m = 0
+            do eg=eg0+1,eg1
+               m = m+1
+               do i = mdw,2,-1
+                  wk(i,m) = wk(i-1,m)
+               enddo
+               wk(1,m) = eg
+            enddo
+
+            if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
+            eg0 = eg1
+         enddo
+c         close(80)
+         call byte_close(iok)
+         ntuple = m
+      elseif (nid.lt.npass) then
+         call msgwait(msg_id)
+         ntuple = ndw
+      else
+         ntuple = 0
+      endif
+
+c     Distribute and assign partitions
+
+      if (nid_io.eq.0) write(6,*) 'ifgfdm',ifgfdm
+
+      if (.not.ifgfdm) then
+      lng = isize*neli
+      call bcast(gllnid,lng)
+      call assign_gllnid(gllnid,gllel,nelgt,nelgv,np) ! gllel is used as scratch
+      endif
+
+c      if(nid.eq.0) then
+c         write(99,*) (gllnid(i),i=1,nelgt)
+c         write( 6,*) (gllnid(i),i=1,nelgt)
+C      endif
+
+      nelt=0 !     Count number of elements on this processor
+      nelv=0
+      do eg=1,neli
+         if (gllnid(eg).eq.nid) then
+            if (eg.le.nelgv) nelv=nelv+1
+            if (eg.le.nelgt) nelt=nelt+1
+         endif
+      enddo
+      if (np.le.64) then 
+          if (nid_io.eq.0) write(6,33) nid,nelv,nelt,nelgv,nelgt
+      endif
+  33  format(5i12,' NELV')
+
+c     now: crystal route vertex by processor id
+      do i=1,ntuple
+         eg=wk(1,i)
+         wk(2,i)=gllnid(eg)        ! processor id for element eg
+      !  write(6,*) 'ntuple',nid,ntuple,i,eg,gllnid(eg),ndim
+      enddo
+
+      key = 2 ! processor id is in wk(2,:)
+      call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
+
+      if (.not.ifgfdm) then            ! no sorting for gfdm?
+         key = 1  ! Sort tuple list by eg := wk(1,:)
+         nkey= 1
+         call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+      endif
+
+      iflag = 0
+      if (ntuple.ne.nelt) then
+         write(6,*) nid,ntuple,nelv,nelt,nelgt,' NELT FAIL'
+         iflag=1
+      else
+         nv = 2**ndim
+         do e=1,nelt
+            call icopy(vertex(1,e),wk(3,e),nv)
+         enddo
+      endif
+
+      iflag = iglmax(iflag,1)
+      if (iflag.gt.0) then
+         do mid=0,np-1
+            call nekgsync
+            if (mid.eq.nid)
+     $      write(6,*) nid,ntuple,nelv,nelt,nelgt,' NELT FB'
+            call nekgsync
+         enddo
+         call nekgsync
+         call exitt(1)
+      endif
+
+      return
+
+  999 continue
+      if (nid.eq.0) write(6,*) 'ABORT: Could not find ma2 file ',mapfle
+      call exitt(1)
+
+  998 continue
+      if (nid.eq.0) write(6,*)ipass,npass,eg0,eg1,mdw,m,eg,'get vX fail'
+      call exitt(1)
+ 
+  200 continue
+      call err_chk(iok,'Error while reading map file$')
+
+     
+      return
+
+
+      end
+c-----------------------------------------------------------------------
+
+
+
+c TODO: delete
+#if 0
 c-----------------------------------------------------------------------
       subroutine get_vert_ma2(nlv)
 
@@ -1131,7 +1348,6 @@ c-----------------------------------------------------------------------
 
       integer*8 vertex(nlv,1)
       integer wk(mdw,ndw)
-
       logical ifbswap,if_byte_swap_test
 
       character*132 mapfle
@@ -1148,6 +1364,11 @@ c-----------------------------------------------------------------------
 
       ierr = 0
       ifma2 = .false.
+
+      if(nid.eq.0) write(6,'(A,I5)') ' nlv ', nlv
+      if(nid.eq.0) write(6,'(A,I5)') ' mdw ', mdw
+      if(nid.eq.0) write(6,'(A,I5)') ' ndw ', ndw
+
 
       if (nid.eq.0) then
          lfname = ltrunc(reafle,132) - 4
@@ -1176,9 +1397,11 @@ c-----------------------------------------------------------------------
             call blank(hdr,132)
             call byte_read(hdr,132/4,ierr)
             if(ierr.ne.0) goto 100
+            if(nid.eq.0) write(6,'(A,A)') ' HDR: ', hdr
 
             read (hdr,1) version,neli,nnzi
     1       format(a5,2i12)
+            if(nid.eq.0) write(6,'(A,A)') ' HDR: ', hdr
 
             call byte_read(test,1,ierr)
             if(ierr.ne.0) goto 100
@@ -1193,6 +1416,10 @@ c-----------------------------------------------------------------------
       call bcast(neli, ISIZE)
 
       npass = 1 + (neli/ndw)
+
+      if(nid.eq.0) write(6,'(A,I5)') ' neli: ', neli
+      if(nid.eq.0) write(6,'(A,I5)') ' npass: ', npass
+      if(nid.eq.0) write(6,'(A,I5)') ' np: ', np
       if (npass.gt.np) then
          if (nid.eq.0) write(6,*) npass,np,neli,ndw,'Error get_vert_map'
          call exitt
@@ -1207,8 +1434,11 @@ c-----------------------------------------------------------------------
          do ipass=1,npass
             eg1 = min(eg0+ndw,neli)
 
+            if(nid.eq.0) write(6,'(A,I5)') ' eg0: ', eg0
+            if(nid.eq.0) write(6,'(A,I5)') ' eg1: ', eg1
             if (ifma2) then
                nwds = (eg1 - eg0)*(mdw-1)
+               if(nid.eq.0) write(6,'(A,I5)') ' nwds: ', nwds
                call byte_read(wk,nwds,ierr)
                if (ierr.ne.0) goto 200
                if (ifbswap) call byte_reverse(wk,nwds,ierr)
@@ -1232,6 +1462,8 @@ c-----------------------------------------------------------------------
             do eg=eg0+1,eg1
                m = m + 1
                gllnid(eg) = wk(1,m)  ! must still be divided
+               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
+               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
                wk(mdw,m) = eg
             enddo
     
@@ -1321,7 +1553,7 @@ c     NOW: crystal route vertex by processor id
 
       return
       end
-
+#endif
 c-----------------------------------------------------------------------
       subroutine read_map(vertex, nlv, nel, suffix, ifgfdm)
       include 'SIZE'
@@ -1381,8 +1613,12 @@ c-----------------------------------------------------------------------
             do eg=eg0+1,eg1
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
+               if(nid.eq.0) write(6,'(A,I5)') ' k ', k
+               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
                if (.not.ifgfdm) gllnid(eg) = wk(2,m)  !proc map,  must still be divided
                wk(1,m) = eg                           !eg=global node id
+               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
+               if(nid.eq.0) write(6,*) (wk(k,m),k=2,mdw)
             !  write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
