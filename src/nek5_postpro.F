@@ -392,14 +392,14 @@ c
       include 'SIZE'
       include 'INPUT'
 
-      parameter (lw=4*lx1*lx1*lz1)
-      common /ctensor/ w1(lw),w2(lw)
+      parameter (lwn=4*lx1*lx1*lz1)
+      common /ctensor/ w1(lwn),w2(lwn)
 
       real v(nv,nv,nv),u(nu,nu,nu)
       real f(1),ft(1)
 
-      if (nu*nu*nv.gt.lw) then
-         write(6,*) nid,nu,nv,lw,' ERROR in tens3d1. Increase lw.'
+      if (nu*nu*nv.gt.lwn) then
+         write(6,*) nid,nu,nv,lwn,' ERROR in tens3d1. Increase lw.'
          call exitt
       endif
 

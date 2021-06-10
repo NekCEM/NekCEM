@@ -1282,11 +1282,11 @@ c     NOW: crystal route vertex by processor id
       enddo
 
       key = 1  ! processor id is in wk(1,:)
-      call fgslib_crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
+      call crystal_ituple_transfer(cr_h,wk,mdw,ntuple,ndw,key)
 
       key = mdw  ! Sort tuple list by eg
       nkey = 1
-      call fgslib_crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
+      call crystal_ituple_sort(cr_h,wk,mdw,nelt,key,nkey)
 
       iflag = 0
       if (ntuple.ne.nelt) then

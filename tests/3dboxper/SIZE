@@ -4,7 +4,7 @@ c     HCUBE array dimensions
                                         
       integer    ldim, lxi, lx1, ly1, lz1, lelv, lelt, lelg
       integer    lpmin, lpmax, lp
-      integer    lxs, lys, lzs, lgmres,lfdm
+      integer    lxs, lys, lzs, lgmres,lfdm,lxo
       parameter (ldim=  3)
       parameter (lxi =  8)  ! polynomial order
       parameter (lx1 =lxi+1,ly1=lxi+1,lz1=1+lxi*(ldim-2))
@@ -16,6 +16,7 @@ c     HCUBE array dimensions
       parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1)
       parameter (lgmres=1)
       parameter (lfdm  =0)  !global fast diagonalization method (1=on; 0=off)
+      parameter (lxo=lx1)
 
 c     Arrays for Quantum Model calculations
       integer    level,lnumqd,lnumsp,lstate,lrho,leqn,lEh
@@ -177,9 +178,9 @@ C
       integer    nx2, ny2, nz2
       integer    nx3, ny3, nz3
       integer    ndim, nfield, nid, npert
-      integer    nxyz, npts, nxzf, nxzfl, nfaces
+      integer    nxyz, npts, nxzf, nxzfl, nfaces, ldimr
 
       COMMON /DIMN/
      $           NELV,NELT,NX1,NY1,NZ1,NX2,NY2,NZ2
-     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT
+     $          ,NX3,NY3,NZ3,NDIM,NFIELD,NID,NPERT,LDIMR
      $          ,NXYZ,NPTS,NXZF,NXZFL,NFACES

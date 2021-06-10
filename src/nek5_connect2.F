@@ -1261,6 +1261,7 @@ C
          WRITE(6,1400)
  1400    FORMAT
      $   ('  Mesh consistency check failed.  EXITING in VRDSMSH.')
+         RETURN
       ENDIF
 C
       tmp(1)=ierr
