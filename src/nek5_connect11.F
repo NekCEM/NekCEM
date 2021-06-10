@@ -928,7 +928,6 @@ c-----------------------------------------------------------------------
       if (ifmap) then
          call read_map(vertex, nlv, nel, '.map', ifgfdm)
       elseif (ifma2) then
-c         call get_vert_ma2(nlv)
          call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
       endif
       return
@@ -948,6 +947,8 @@ c-----------------------------------------------------------------------
       parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
       common /scrns/ wk(mdw,ndw)   ! room for long ints, if desired
       integer wk,e,eg,eg0,eg1
+      integer neli,nnzi
+      integer iok,ierr
 
       character*132 mapfle
       character*1   mapfle1(132)
@@ -958,33 +959,40 @@ c-----------------------------------------------------------------------
       real*4        test
       integer       itmp20(20)
       logical ifbswap,if_byte_swap_test
-
+      
+      ierr = 0
       iok = 0
       if (nid.eq.0) then
          lfname = ltrunc(reafle,132) - 4
          call blank (mapfle,132)
          call chcopy(mapfle,reafle,lfname)
          call chcopy(mapfle1(lfname+1),suffix,4)
-c         open(unit=80,file=mapfle,status='old',err=99)
-c         read(80,*,err=99) neli,nnzi
-c         iok = 1
-         call byte_open(mapfle,iok)
-         if(iok.ne.0) goto 999
+         
+         call byte_open(mapfle,ierr)
+         if(ierr.ne.0) goto 999
 
          call blank(hdr,132)
          call byte_read(hdr,132/4,iok)
-         if(iok.ne.0) goto 999
+         if(ierr.ne.0) goto 999
 
          read (hdr,1) version,neli,nnzi
+         write(6,*) ' version,neli,nnzi:', version,neli,nnzi
     1    format(a5,2i12)
-         call byte_read(test,1,iok)
-         if(iok.ne.0) goto 999
-         ifbswap = if_byte_swap_test(test,iok)
-         if(iok.ne.0) goto 999
+
+         call byte_read(test,1,ierr)
+         if(ierr.ne.0) goto 999
+         ifbswap = if_byte_swap_test(test,ierr)
+         if(ierr.ne.0) goto 999
+
+         if (nid.eq.0) write(6,*) ' Finish reading ma2 header'
+         if (ierr.eq.0) then
+            iok = 1
+         endif
       endif
-c   99 continue
-c      iok = iglmax(iok,1)
-c      if (iok.eq.0) goto 999     ! Mapfile not found
+
+   99 continue
+      iok = iglmax(iok,1)
+      if (iok.eq.0) goto 999     ! Mapfile not found
 
       if (nid.eq.0) then
          neli = iglmax(neli,1)   ! communicate to all procs
@@ -1004,24 +1012,12 @@ c      if (iok.eq.0) goto 999     ! Mapfile not found
       if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
       call nekgsync
 
+      if (nid.eq.0) write(6,*) ' Start loop'
       if (nid.eq.0) then
+         if (nid.eq.0) write(6,*) ' Start reading ma2'
          eg0 = 0
          do ipass=1,npass
             eg1 = min(eg0+ndw,neli)
-#if 0
-            m   = 0
-            do eg=eg0+1,eg1
-               m = m+1
-               read(80,*,end=998) (wk(k,m),k=2,mdw)
-               if(nid.eq.0) write(6,'(A,I5)') ' k ', k
-               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
-               if (.not.ifgfdm) gllnid(eg) = wk(2,m)  !proc map,  must still be divided
-               wk(1,m) = eg                           !eg=global node id
-               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
-               if(nid.eq.0) write(6,*) (wk(k,m),k=2,mdw)
-            !  write(6,*) (wk(k,m),k=1,mdw)
-            enddo
-#endif
             nwds = (eg1 - eg0)*(mdw-1)
             call byte_read(wk,nwds,iok)
             if (iok.ne.0) goto 200
@@ -1043,6 +1039,10 @@ c      if (iok.eq.0) goto 999     ! Mapfile not found
                   wk(i,m) = wk(i-1,m)
                enddo
                wk(1,m) = eg
+c TODO: for debugging
+               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
+               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
+               if(nid.eq.0) write(6,*) (wk(k,m),k=2,mdw)
             enddo
 
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
@@ -1124,7 +1124,6 @@ c     now: crystal route vertex by processor id
          call nekgsync
          call exitt(1)
       endif
-
       return
 
   999 continue
@@ -1138,9 +1137,7 @@ c     now: crystal route vertex by processor id
   200 continue
       call err_chk(iok,'Error while reading map file$')
 
-     
       return
-
 
       end
 c-----------------------------------------------------------------------
@@ -1613,7 +1610,7 @@ c-----------------------------------------------------------------------
             do eg=eg0+1,eg1
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
-               if(nid.eq.0) write(6,'(A,I5)') ' k ', k
+c TODO: for debugging
                if(nid.eq.0) write(6,'(A,I5)') ' m ', m
                if (.not.ifgfdm) gllnid(eg) = wk(2,m)  !proc map,  must still be divided
                wk(1,m) = eg                           !eg=global node id
