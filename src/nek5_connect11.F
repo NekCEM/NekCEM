@@ -899,6 +899,31 @@ c-----------------------------------------------------------------------
 
       logical ifma2,ifmap
 
+      parameter(mdw=2+2**ldim)
+      parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
+      common /scrns/ wk(mdw*ndw)
+      integer*8 wk
+
+      integer     wk4(2*mdw*ndw)
+      equivalence (wk4,wk)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer ibuf(2)
+      integer*8 vertex((2**ldim),lelt)
+
+      integer*8 eid8(lelt), vtx8(lelt*2**ldim)
+      integer   iwork(lelt)
+      common /ctmp0/ eid8, vtx8, iwork
+
+      common /scrcg/ xyz(ldim*lelt*2**ldim)
+
+      integer cnt, algo
+      integer opt_parrsb(3), opt_parmetis(10)
+
+      logical ifbswap, ifread_con
+
+
       ierr = 0
       ifma2 = .false.
 
@@ -925,12 +950,177 @@ c-----------------------------------------------------------------------
       call bcast(ifma2,lsize)
       ierr = 0
 
+#if !defined(PARRSB) && !defined(PARMETIS)
+# if defined(DPROCMAP)
+      call exitti('DPROCMAP requires PARRSB or PARMETIS!$',0)
+# else
+      if(nid.eq.0) write(6,*) ' get_vert_map using .map or .ma2'
       if (ifmap) then
          call read_map(vertex, nlv, nel, '.map', ifgfdm)
       elseif (ifma2) then
          call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
       endif
       return
+# endif
+#else
+      if(nid.eq.0) write(6,*) ' get_vert_map using .co2'
+      neli = nelt
+      ifread_con = .true.
+      call read_con(wk4,size(wk),neli,nlv,ierr)
+
+      if (ierr.ne.0) then
+        ifread_con = .false.
+        call find_con(wk,nwk,0.2,ierr)
+        if(ierr.ne.0) call find_con(wk,nwk,0.01,ierr)
+        call err_chk(ierr,' findConnectivity failed!$')
+      endif
+
+c fluid elements
+      if(nid.eq.0) write(6,*) ' get_vert_map using .co2, fluid elements'
+      j  = 0
+      ii = 0
+      cnt= 0
+      do i = 1,neli
+         itmp = wk(ii+1)
+         if (ifread_con) itmp = wk4(ii+1)
+
+         if (itmp .le. nelgv) then
+            j = j + 1
+
+            eid8(j) = wk(ii+1)
+            call i8copy(vtx8((j-1)*nlv+1),wk(ii+2),nlv)
+            if (ifread_con) then
+              eid8(j) = wk4(ii+1)
+              call icopy48(vtx8((j-1)*nlv+1),wk4(ii+2),nlv)
+            endif
+
+            do iv=1,nlv
+              xyz(cnt+1)=xc(iv,i)
+              xyz(cnt+2)=yc(iv,i)
+              if(ldim.eq.3) then
+                xyz(cnt+3)=zc(iv,i)
+                cnt=cnt+3
+              else
+                cnt=cnt+2
+              endif
+            enddo
+         endif
+         ii = ii + (nlv+1)
+      enddo
+      neliv = j
+
+      algo = 0 ! 0 - Lanczos, 1 - MG
+      nel = neliv
+      if(nid.eq.0) write(6,*) ' calling fpartMesh'
+      call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
+     $  meshPartitioner,algo,loglevel,ierr)
+      call err_chk(ierr,'partMesh fluid failed!$')
+
+      nelv = nel
+      nelt = nelv
+      ierr = 0 
+      if (nelv .gt. lelv) ierr = 1
+      call err_chk(ierr,'nelv > lelv!$')
+      if(nid.eq.0) write(6,*) ' nelv', nelv
+      if(nid.eq.0) write(6,*) ' nelt', nelt
+ 
+      do i = 1,nelv
+         if(nid.eq.0) write(6,*) ' lglel(i)=eid8(i)'
+         lglel(i) = eid8(i)
+      enddo
+      if(nid.eq.0) write(6,*) ' calling isort'
+      call isort(lglel,iwork,nelv)
+      do i = 1,nelv
+         if(nid.eq.0) write(6,*) ' calling i8copy'
+         if(nid.eq.0) write(6,*) vertex(1,i)
+         if(nid.eq.0) write(6,*) iwork(i)
+         if(nid.eq.0) write(6,*) vtx8((iwork(i)-1)*nlv+1)
+         call i8copy(vertex(1,i),vtx8((iwork(i)-1)*nlv+1),nlv)
+      enddo
+
+      cnt=0
+c solid elements
+      if(nid.eq.0) write(6,*) ' get_vert_map using .co2, solid elements'
+      if (nelgt.ne.nelgv) then
+         j  = 0
+         ii = 0
+         do i = 1,neli
+            itmp = wk(ii+1)
+            if (ifread_con) itmp = wk4(ii+1)
+
+            if (itmp .gt. nelgv) then
+               j = j + 1
+
+               eid8(j) = wk(ii+1)
+               call i8copy(vtx8((j-1)*nlv+1),wk(ii+2),nlv)
+               if (ifread_con) then
+                 eid8(j) = wk4(ii+1)
+                 call icopy48(vtx8((j-1)*nlv+1),wk4(ii+2),nlv)
+               endif
+
+               do iv=1,nlv
+                 xyz(cnt+1)=xc(iv,i)
+                 xyz(cnt+2)=yc(iv,i)
+                 if(ldim.eq.3) then
+                   xyz(cnt+3)=zc(iv,i)
+                   cnt=cnt+3
+                 else
+                   cnt=cnt+2
+                 endif
+               enddo
+            endif
+            ii = ii + (nlv+1)
+         enddo
+         nelit = j
+
+         algo = 0 ! 0 - Lanczos, 1 - MG
+         nel = nelit
+         if(nid.eq.0) write(6,*) ' calling fpartMesh'
+         call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
+     $                  meshPartitioner,algo,loglevel,ierr)
+         call err_chk(ierr,'partMesh solid failed!$')
+
+         nelt = nelv + nel
+         ierr = 0 
+         if (nelt .gt. lelt) ierr = 1
+         call err_chk(ierr,'nelt > lelt!$')
+    
+         do i = 1,nel
+            lglel(nelv+i) = eid8(i)
+         enddo
+         call isort(lglel(nelv+1),iwork,nel) ! sort locally by global element id
+         do i = 1,nel
+            call i8copy(vertex(1,nelv+i),vtx8((iwork(i)-1)*nlv+1),nlv)
+         enddo
+      endif
+
+c#ifdef DPROCMAP
+c      do i = 1,nelt
+c         ieg = lglel(i)
+c         if (ieg.lt.1 .or. ieg.gt.nelgt) 
+c     $      call exitti('invalid ieg!$',ieg)
+c         ibuf(1) = i
+c         ibuf(2) = nid
+c         call dProcmapPut(ibuf,2,0,ieg)
+c      enddo
+c#else
+      call izero(gllnid,nelgt)
+      do i = 1,nelt
+         ieg = lglel(i)
+         gllnid(ieg) = nid
+      enddo
+      npass = 1 + nelgt/lelt
+      k=1
+      do ipass = 1,npass
+         m = nelgt - k + 1
+         m = min(m,lelt)
+         if (m.gt.0) call igop(gllnid(k),iwork,'+  ',m)
+         k = k+m
+      enddo
+c#endif
+
+
+#endif
       end
 
 c-----------------------------------------------------------------------
@@ -1140,6 +1330,198 @@ c     now: crystal route vertex by processor id
       return
 
       end
+
+c-----------------------------------------------------------------------
+      subroutine read_con(wk,nwk,nelr,nv,ierr)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+
+      integer nwk,nelr,nv,ierr
+      integer wk(nwk)
+     
+
+      logical ifbswap,if_byte_swap_test
+      logical ifco2, ifcon
+
+      character*132 confle
+      character*1   confle1(132)
+      equivalence  (confle,confle1)
+
+      character*132 hdr
+      character*5   version
+      real*4        test
+
+      integer nvi
+      integer*8 nelgti,nelgvi
+      integer*8 offs, offs0
+
+      ierr = 0
+
+      ifco2 = .false.
+      ifmpiio = .true.
+#ifdef NOMPIIO
+      ifmpiio = .false.
+#endif
+
+      if (nid.eq.0) then
+         lfname = ltrunc(reafle,132) - 4
+         call blank (confle,132)
+         call chcopy(confle,reafle,lfname)
+         call chcopy(confle1(lfname+1),'.con',4)
+         inquire(file=confle, exist=ifcon)
+
+         if (.not.ifcon) then
+            call chcopy(confle1(lfname+1),'.co2',4)
+            inquire(file=confle, exist=ifco2)
+         endif
+
+        if(.not.ifcon .and. .not.ifco2) ierr = 1
+      endif
+
+      call bcast(ierr,sizeof(ierr))
+      if(ierr.ne.0) return
+
+      call bcast(confle,sizeof(confle))
+      if(nid.eq.0) write(6,'(A,A)') ' Reading ', confle
+      call bcast(ifco2,lsize)
+
+      ierr = 0
+
+      ! read header
+      if (nid.eq.0) then
+         if (ifco2) then
+            call byte_open(confle,ierr)
+            if(ierr.ne.0) goto 100
+
+            call blank(hdr,sizeof(hdr))
+            call byte_read(hdr,sizeof(hdr)/4,ierr)
+            if(ierr.ne.0) goto 100
+
+            read (hdr,*) version,nelgti,nelgvi,nvi
+c    1       format(a5,2i12,i2)
+
+            call byte_read(test,1,ierr)
+            if(ierr.ne.0) goto 100
+            ifbswap = if_byte_swap_test(test,ierr)
+            if(ierr.ne.0) goto 100
+         endif
+      endif
+      call bcast(nelgti,sizeof(nelgti))
+      call bcast(nelgvi,sizeof(nelgvi))
+      call bcast(nvi,sizeof(nvi))
+      call bcast(ifbswap,sizeof(ifbswap))
+
+      if (nvi .ne. nv)
+     $   call exitti('Number of vertices do not match!$',0)
+      if (nelgti .ne. nelgt)
+     $   call exitti('nelgt for mesh/con differs!$',0)
+      if (nelgvi .ne. nelgv)
+     $   call exitti('nelgt for mesh/con differs!$',0)
+
+      if (ifco2 .and. ifmpiio) then
+        if (nid.eq.0) call byte_close(ierr)
+        call byte_open_mpi(confle,ifh,.true.,ierr)
+        offs0 = sizeof(hdr) + sizeof(test)
+
+        call lim_chk(nelr*(nvi+1),nwk,'nelr ','nwk   ','read_con  ')
+
+        nelBr = igl_running_sum(nelr) - nelr
+        offs  = offs0 + int(nelBr,8)*(nvi+1)*ISIZE
+
+        call byte_set_view(offs,ifh)
+        call byte_read_mpi(wk,(nvi+1)*nelr,-1,ifh,ierr)
+        call err_chk(ierr,' Error while reading con file!$')
+        call byte_close_mpi(ifh,ierr)
+        if (ifbswap) call byte_reverse(wk,(nvi+1)*nelr,ierr)
+      endif
+
+      return
+
+
+ 100  continue
+      call err_chk(ierr,'Error opening/reading con file$')
+      return
+
+      end
+c-----------------------------------------------------------------------
+#if defined(PARRSB)      
+      subroutine find_con(wk,nwk,tol,ierr)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+
+      integer nwk,ierr
+      integer*8 wk(nwk)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /scrcg/ xyz(ldim*(2**ldim)*lelt)
+
+      integer*8 eid8(4*lelt),vtx8(lelt*(2**ldim+1))
+      common /ctmp0/ eid8, vtx8, iwork
+
+      ierr = 0
+
+      nv=2**ndim
+      nf=2*ndim
+
+      k=0
+      if(ndim.eq.3) then
+        do i=1,nelt
+          do j=1,nv
+            xyz(k+1)=xc(j,i)
+            xyz(k+2)=yc(j,i)
+            xyz(k+3)=zc(j,i)
+            k=k+3
+          enddo
+        enddo
+      else
+        do i=1,nelt
+          do j=1,nv
+            xyz(k+1)=xc(j,i)
+            xyz(k+2)=yc(j,i)
+            k=k+2
+          enddo
+        enddo
+      endif
+
+      istart=igl_running_sum(nelt)-nelt
+
+      !calculate number of periodic pairs
+      npf=0
+      do i=1,nelt
+        do j=1,nf
+          if(cbc(j,i,1).eq.'P  ') then
+            eid8(4*npf+1)=i+istart
+            eid8(4*npf+2)=j
+            eid8(4*npf+3)=bc(1,j,i,1)
+            eid8(4*npf+4)=bc(2,j,i,1)
+            npf=npf+1
+          endif
+        enddo
+      enddo
+
+      call fparrsb_findConnectivity(vtx8,xyz,nelt,ndim,
+     $  eid8,npf,tol,nekcomm,0,ierr)
+
+      k=1
+      l=1
+      do i=1,nelt
+        wk(k)=istart+i
+        k=k+1
+        do j=1,nv 
+          wk(k)=vtx8(l)
+          k=k+1
+          l=l+1
+        enddo
+      enddo
+
+      end
+#endif
+
+
 c-----------------------------------------------------------------------
       subroutine read_map(vertex, nlv, nel, suffix, ifgfdm)
       include 'SIZE'

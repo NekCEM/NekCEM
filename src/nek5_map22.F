@@ -96,6 +96,123 @@ C      ENDIF
 c-----------------------------------------------------------------------
       subroutine set_proc_map()
 C
+C     Compute element to processor distribution according to (weighted) 
+C     physical distribution in an attempt to minimize exposed number of
+C     element interfaces.
+C
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'INPUT'
+      include 'DPROCMAP'
+
+      integer ibuf(2)
+      logical ifbswap
+      logical ifre2
+
+      integer iwork(lelt)
+
+      if(nid.eq.0) inquire(file=re2fle, exist=ifre2)
+      call bcast(ifre2,lsize)
+      if(.not.ifre2) then
+        if (nid_io.eq.0) write(6,*) 'Calling set_proc_map (NekCEM)'
+        call set_proc_map_legacy
+        return
+      endif
+
+      if (nid_io.eq.0) write(6,*) 'Calling set_proc_map (Nek5000)'
+      call read_re2_hdr(ifbswap, .false.)
+      nelt = nelgt/np
+      do i = 1,mod(nelgt,np)
+        if (np-i.eq.nid) nelt = nelt + 1
+      enddo
+
+      if (nelt .gt. lelt)
+     $   call exitti('nelt > lelt!$',nelt)
+
+      ! setup gllnid + gllel
+c#if defined(DPROCMAP)
+c      call dProcmapInit()  
+c      dProcmapCache = .false.
+c#endif
+      nelB = igl_running_sum(nelt) - nelt
+      do i = 1,nelt
+         ieg = nelB + i
+         lglel(i) = ieg 
+         if (ieg.lt.1 .or. ieg.gt.nelgt)
+     $      call exitti('invalid ieg!$',ieg)
+c#if defined(DPROCMAP)
+c         ibuf(1) = i
+c         ibuf(2) = nid
+c         call dProcmapPut(ibuf,2,0,ieg)
+c#else
+         gllnid(ieg) = nid
+         gllel(ieg) = i 
+c#endif
+      enddo
+c#if !defined(DPROCMAP)
+      npass = 1 + nelgt/lelt
+      k=1
+      do ipass = 1,npass
+         m = nelgt - k + 1
+         m = min(m,lelt)
+         if (m.gt.0) call igop(gllnid(k),iwork,'+  ',m)
+         if (m.gt.0) call igop(gllel(k) ,iwork,'+  ',m)
+         k = k+m
+      enddo
+c#endif
+
+      ! read coord for RCB and/or connectivity
+      if (nid_io.eq.0) write(6,*) 'Calling read_re2_data'
+      call read_re2_data(ifbswap, .true., .false., .true.) 
+
+      ! get element-proc mapping      
+      if (nid_io.eq.0) write(6,*) 'Calling get_map()'
+      call get_map() 
+
+      itmp = gllnid(0) ! reset last element cache
+      itmp = gllel(0)  ! reset last element cache
+      dProcmapCache = .true.
+
+c#if !defined(DPROCMAP)
+      if (nid_io.eq.0) write(6,*) 'Compute global to local map(no proc)'
+      IEL=0
+      CALL IZERO(GLLEL,NELGT)
+      DO IEG=1,NELGT
+         IF (GLLNID(IEG).EQ.NID) THEN
+            IEL = IEL + 1
+            GLLEL(IEG)=IEL
+            NELT = IEL
+            if (ieg.le.nelgv) NELV = IEL
+         ENDIF
+c        write(6,*) 'map2 ieg:',ieg,nelv,nelt,nelgv,nelgt
+      ENDDO
+      
+      if (nid_io.eq.0) write(6,*) 'global to local map (all proc)'
+      npass = 1 + nelgt/lelt
+      k=1
+      do ipass = 1,npass
+         m = nelgt - k + 1
+         m = min(m,lelt)
+         if (m.gt.0) call igop(gllel(k),iwork,'+  ',m)
+         k = k+m
+      enddo
+
+      if (nid_io.eq.0) write(6,*) 'local to global map'
+      do ieg=1,nelgt
+         mid  =gllnid(ieg)
+         ie   =gllel (ieg)
+         if (mid.eq.nid) lglel(ie)=ieg
+      enddo
+      if (nid_io.eq.0) write(6,*) 'done:: set_proc_map() (Nek5000)'
+c#endif
+
+      return
+      end
+
+
+c-----------------------------------------------------------------------
+      subroutine set_proc_map_legacy()
+C
 C     Compute element to processor distribution according to (weighted)
 C     physical distribution in an attempt to minimize exposed number of
 C     element interfaces.
