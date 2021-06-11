@@ -167,12 +167,14 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
         LDFLAGS = LDFLAGS.split()
 
     # TODO: HARDCODED
-    USR_LFLAGS = "-L{0}/3rd_party/blasLapack -lblasLapack -L{0}/3rd_party/gslib/lib -lgs".format(NEK)
+    USR_LFLAGS = "-L{0}/3rd_party/blasLapack -lblasLapack -L{0}/3rd_party/gslib/lib -lgs -L{0}/3rd_party/parRSB/lib -lparRSB -L{0}/3rd_party/parMETIS/lib -lparmetis -lmetis".format(NEK)
 
-    return backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS
+    USR_IFLAGS = "-I{0}/3rd_party/gslib/include -I{0}/3rd_party/parRSB/include -I{0}/3rd_party/parMETIS/include".format(NEK)
+    
+    return backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS, USR_IFLAGS
 
 
-def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS):
+def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS, USR_IFLAGS):
     NEKBASE = os.path.join(NEK, 'src')
     nekfn = os.path.join(NEK, 'bin', 'Makefile.inc')
     fn = os.path.join(EXAMPLE, 'Makefile')
@@ -194,6 +196,7 @@ def write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS
                 line = line.replace('?APP?', 'APP = {0}'.format(app))
                 line = line.replace('?USR?', 'USR = {0}'.format(usr))
                 line = line.replace('?USR_LFLAGS?', 'USR_LFLAGS = {0}'.format(USR_LFLAGS))
+                line = line.replace('?USR_IFLAGS?', 'USR_IFLAGS = {0}'.format(USR_IFLAGS))
                 make.write(line)
 
 
@@ -226,7 +229,7 @@ def main():
         config = configure(args.FC, args.FFLAGS,
                            args.CC, args.CFLAGS,
                            args.LD, args.LDFLAGS)
-    backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS = config
+    backend, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS, USR_IFLAGS = config
     if args.extra_FFLAGS:
         FFLAGS += args.extra_FFLAGS.split()
     if args.extra_CFLAGS:
@@ -253,7 +256,7 @@ def main():
         JL = args.jl
     else:
         JL = os.path.join(NEK, 'src', 'jl')
-    write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS)
+    write_makefile(app, usr, JL, FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS, USR_LFLAGS, USR_IFLAGS)
 
 
 if __name__ == '__main__':

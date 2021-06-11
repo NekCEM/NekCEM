@@ -9,6 +9,7 @@
 ?APP?
 ?USR?
 ?USR_LFLAGS?
+?USR_IFLAGS?
 
 BINNAME=nekcem
 APPSRC = $(shell find $(NEKBASE) -name cem_$(APP)*.F)
@@ -38,7 +39,7 @@ obj/%.o: $(NEKBASE)/%.F SIZE
 	$(FC) -c $(FFLAGS) $< -o $@
 
 obj/%.o: $(NEKBASE)/%.c
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(USR_IFLAGS) $< -o $@
 
 obj/%.o: $(JLBASE)/%.c
 	$(CC) -c $(CFLAGS) $< -o $@
