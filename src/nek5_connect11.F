@@ -864,6 +864,10 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine get_vert
+#if !defined(PARRSB) && !defined(PARMETIS)
+#if defined(DPROCMAP)
+      call exitti('DPROCMAP requires PARRSB or PARMETIS!$',0)
+#else
       include 'SIZE'
       include 'TOTAL'
       include 'ZPER'
@@ -884,20 +888,41 @@ c-----------------------------------------------------------------------
       if (iftet) ncrnr = ndim + 1
       if (nid_io.eq.0) write(6,*) 'get_vert, ncrnr=',ncrnr
 
+      if (nid_io.eq.0) write(6,*) ' Call get_vert_map (with .map/.ma2)'
       call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 
       return
+#endif
+#endif
+
+#if defined(PARRSB) || defined(PARMETIS)
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      if(icalld.gt.0) return
+
+      nv = 2**ldim
+      if (nid_io.eq.0) write(6,*) 'Call get_vert_map_con (with .co2)'
+      call get_vert_map_con(nv)
+
+      icalld = 1
+
+      return
+#endif
+      return
+
       end
+
+#if defined(PARRSB) || defined(PARMETIS)
 c-----------------------------------------------------------------------
-      subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
+      subroutine get_vert_map_con(nlv)
 
       include 'SIZE'
       include 'TOTAL'
-      character*132 mapfle
-      character*1   mapfle1(132)
-      equivalence  (mapfle,mapfle1)
-
-      logical ifma2,ifmap
 
       parameter(mdw=2+2**ldim)
       parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
@@ -907,10 +932,12 @@ c-----------------------------------------------------------------------
       integer     wk4(2*mdw*ndw)
       equivalence (wk4,wk)
 
+      common /ivrtx/ vertex ((2**ldim),lelt)
+      integer*8 vertex
+
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       integer ibuf(2)
-      integer*8 vertex((2**ldim),lelt)
 
       integer*8 eid8(lelt), vtx8(lelt*2**ldim)
       integer   iwork(lelt)
@@ -923,60 +950,22 @@ c-----------------------------------------------------------------------
 
       logical ifbswap, ifread_con
 
-
-      ierr = 0
-      ifma2 = .false.
-
-      if (nid.eq.0) then
-         lfname = ltrunc(reafle,132) - 4
-         call blank (mapfle,132)
-         call chcopy(mapfle,reafle,lfname)
-         call chcopy(mapfle1(lfname+1),'.map',4)
-         inquire(file=mapfle, exist=ifmap)
-
-         if (.not.ifmap) then
-            call chcopy(mapfle1(lfname+1),'.ma2',4)
-            inquire(file=mapfle, exist=ifma2)
-         endif
-
-        if(.not.ifmap .and. .not.ifma2) ierr = 1 
-      endif
-      if(nid.eq.0) write(6,'(A,A)') ' Reading ', mapfle
-      if(nid.eq.0) write(6,*) ' ifma2'
-      if(nid.eq.0) write(6,*) ifma2
-      if(nid.eq.0) write(6,*) ' ifmap'
-      if(nid.eq.0) write(6,*) ifmap
-      call err_chk(ierr,' Cannot find map file!$')
-      call bcast(ifma2,lsize)
-      ierr = 0
-
-#if !defined(PARRSB) && !defined(PARMETIS)
-# if defined(DPROCMAP)
-      call exitti('DPROCMAP requires PARRSB or PARMETIS!$',0)
-# else
-      if(nid.eq.0) write(6,*) ' get_vert_map using .map or .ma2'
-      if (ifmap) then
-         call read_map(vertex, nlv, nel, '.map', ifgfdm)
-      elseif (ifma2) then
-         call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
-      endif
-      return
-# endif
-#else
-      if(nid.eq.0) write(6,*) ' get_vert_map using .co2'
+c#if defined(PARRSB) || defined(PARMETIS)
       neli = nelt
       ifread_con = .true.
+      if(nid.eq.0) write(6,*) ' Calling read_con'
       call read_con(wk4,size(wk),neli,nlv,ierr)
 
       if (ierr.ne.0) then
         ifread_con = .false.
+        if(nid.eq.0) write(6,*) ' Calling find_cond'
         call find_con(wk,nwk,0.2,ierr)
         if(ierr.ne.0) call find_con(wk,nwk,0.01,ierr)
         call err_chk(ierr,' findConnectivity failed!$')
       endif
 
 c fluid elements
-      if(nid.eq.0) write(6,*) ' get_vert_map using .co2, fluid elements'
+      if(nid.eq.0) write(6,*) ' Fluid elements'
       j  = 0
       ii = 0
       cnt= 0
@@ -1011,7 +1000,25 @@ c fluid elements
 
       algo = 0 ! 0 - Lanczos, 1 - MG
       nel = neliv
-      if(nid.eq.0) write(6,*) ' calling fpartMesh'
+      if (nid.eq.0) then
+         if(nid.eq.0) write(6,*) ' lelt', lelt
+         if(nid.eq.0) write(6,*) ' nel', nel 
+         if(nid.eq.0) write(6,*) ' nlv', nlv
+         if(nid.eq.0) write(6,*) ' meshPartitioner', meshPartitioner
+         do i=1,lelt
+            if(nid.eq.0) write(6,*) ' i', i
+            if(nid.eq.0) write(6,*) ' eid8(i)', eid8(i)
+         enddo
+         do i=1,lelt*2**ldim
+            if(nid.eq.0) write(6,*) ' i', i
+            if(nid.eq.0) write(6,*) ' vtx8(i)', vtx8(i)
+         enddo
+         do i=1,ldim*lelt*2**ldim
+            if(nid.eq.0) write(6,*) ' i', i
+            if(nid.eq.0) write(6,*) ' xyz(i)', xyz(i)
+         enddo
+      endif
+      if(nid.eq.0) write(6,*) ' Call fpartMesh'
       call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
      $  meshPartitioner,algo,loglevel,ierr)
       call err_chk(ierr,'partMesh fluid failed!$')
@@ -1021,26 +1028,19 @@ c fluid elements
       ierr = 0 
       if (nelv .gt. lelv) ierr = 1
       call err_chk(ierr,'nelv > lelv!$')
-      if(nid.eq.0) write(6,*) ' nelv', nelv
-      if(nid.eq.0) write(6,*) ' nelt', nelt
  
+      if(nid.eq.0) write(6,*) ' Call lglel(i)=eid8(i)'
       do i = 1,nelv
-         if(nid.eq.0) write(6,*) ' lglel(i)=eid8(i)'
          lglel(i) = eid8(i)
       enddo
-      if(nid.eq.0) write(6,*) ' calling isort'
+      if(nid.eq.0) write(6,*) ' Call isort'
       call isort(lglel,iwork,nelv)
       do i = 1,nelv
-         if(nid.eq.0) write(6,*) ' calling i8copy'
-         if(nid.eq.0) write(6,*) vertex(1,i)
-         if(nid.eq.0) write(6,*) iwork(i)
-         if(nid.eq.0) write(6,*) vtx8((iwork(i)-1)*nlv+1)
          call i8copy(vertex(1,i),vtx8((iwork(i)-1)*nlv+1),nlv)
       enddo
 
       cnt=0
 c solid elements
-      if(nid.eq.0) write(6,*) ' get_vert_map using .co2, solid elements'
       if (nelgt.ne.nelgv) then
          j  = 0
          ii = 0
@@ -1075,7 +1075,6 @@ c solid elements
 
          algo = 0 ! 0 - Lanczos, 1 - MG
          nel = nelit
-         if(nid.eq.0) write(6,*) ' calling fpartMesh'
          call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
      $                  meshPartitioner,algo,loglevel,ierr)
          call err_chk(ierr,'partMesh solid failed!$')
@@ -1119,8 +1118,58 @@ c#else
       enddo
 c#endif
 
+c#endif
 
+      return
+      end
+c-----------------------------------------------------------------------
 #endif
+
+c-----------------------------------------------------------------------
+      subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
+
+      include 'SIZE'
+      include 'TOTAL'
+      character*132 mapfle
+      character*1   mapfle1(132)
+      equivalence  (mapfle,mapfle1)
+
+      logical ifma2,ifmap
+
+      ierr = 0
+      ifma2 = .false.
+
+      if (nid.eq.0) then
+         lfname = ltrunc(reafle,132) - 4
+         call blank (mapfle,132)
+         call chcopy(mapfle,reafle,lfname)
+         call chcopy(mapfle1(lfname+1),'.map',4)
+         inquire(file=mapfle, exist=ifmap)
+
+         if (.not.ifmap) then
+            call chcopy(mapfle1(lfname+1),'.ma2',4)
+            inquire(file=mapfle, exist=ifma2)
+         endif
+
+        if(.not.ifmap .and. .not.ifma2) ierr = 1 
+      endif
+      if(nid.eq.0) write(6,'(A,A)') ' Reading ', mapfle
+      if(nid.eq.0) write(6,*) ' ifma2'
+      if(nid.eq.0) write(6,*) ifma2
+      if(nid.eq.0) write(6,*) ' ifmap'
+      if(nid.eq.0) write(6,*) ifmap
+      call err_chk(ierr,' Cannot find map file!$')
+      call bcast(ifma2,lsize)
+      ierr = 0
+
+      if(nid.eq.0) write(6,*) ' get_vert_map using .map or .ma2'
+      if (ifmap) then
+         call read_map(vertex, nlv, nel, '.map', ifgfdm)
+      elseif (ifma2) then
+         call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
+      endif
+
+      return
       end
 
 c-----------------------------------------------------------------------
@@ -1401,6 +1450,10 @@ c-----------------------------------------------------------------------
 
             read (hdr,*) version,nelgti,nelgvi,nvi
 c    1       format(a5,2i12,i2)
+            if (nid.eq.0) write(6,*) 'version:',version
+            if (nid.eq.0) write(6,*) 'nelgti:',nelgti
+            if (nid.eq.0) write(6,*) 'nelgvi:',nelgvi
+            if (nid.eq.0) write(6,*) 'nvi:',nvi
 
             call byte_read(test,1,ierr)
             if(ierr.ne.0) goto 100
@@ -1422,15 +1475,18 @@ c    1       format(a5,2i12,i2)
 
       if (ifco2 .and. ifmpiio) then
         if (nid.eq.0) call byte_close(ierr)
+        if (nid.eq.0) write(6,*) 'Call byte_open_mpi'
         call byte_open_mpi(confle,ifh,.true.,ierr)
         offs0 = sizeof(hdr) + sizeof(test)
 
+        if (nid.eq.0) write(6,*) 'Call lim_chk'
         call lim_chk(nelr*(nvi+1),nwk,'nelr ','nwk   ','read_con  ')
 
         nelBr = igl_running_sum(nelr) - nelr
         offs  = offs0 + int(nelBr,8)*(nvi+1)*ISIZE
 
         call byte_set_view(offs,ifh)
+        if (nid.eq.0) write(6,*) 'Call byte_read_mpi'
         call byte_read_mpi(wk,(nvi+1)*nelr,-1,ifh,ierr)
         call err_chk(ierr,' Error while reading con file!$')
         call byte_close_mpi(ifh,ierr)

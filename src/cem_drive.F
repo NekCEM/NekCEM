@@ -33,6 +33,8 @@ c     real*8 dclock
       real eps
       integer igeom
 
+      integer*8 itest8
+
       ! set word size for REAL
       eps = 1.0e-12
       if (1.0 + eps .ne. 1.0) then
@@ -42,6 +44,8 @@ c     real*8 dclock
       endif
       ! set word size for INTEGER
       isize = 4
+      ! set word size for INTEGER*8
+      isize8 = sizeof(itest8)
       ! set word size for LOGICAL
       lsize = 4
       ! set word size for CHARACTER

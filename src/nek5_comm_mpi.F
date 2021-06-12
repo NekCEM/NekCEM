@@ -256,6 +256,7 @@ c----------------------------------------------------------------------
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
 
       logical flag
+      integer*8 isize_mpi, lb
 
       nid  = mynode()
       nid_ = nid
@@ -300,6 +301,23 @@ c     if (nid.eq.0) nio=0  ! Only node 0 writes
       endif
       nekreal = mpi_real
       if (wdsize.eq.8) nekreal = mpi_double_precision
+
+      call MPI_Type_Get_Extent(MPI_DOUBLE_PRECISION,lb,isize_mpi,ierr)
+      if (isize_mpi .ne. wdsize) then
+         call exitti('MPI real size does not match$',isize_mpi)
+      endif
+
+      call MPI_Type_Get_Extent(MPI_INTEGER,lb,isize_mpi,ierr)
+       if (isize_mpi .ne. isize) then
+         call exitti('MPI integer size does not match$',isize_mpi)
+      endif
+
+      call MPI_Type_Get_Extent(MPI_INTEGER8,lb,isize_mpi,ierr)
+       if (isize_mpi .ne. isize8) then
+         call exitti('MPI integer8 size does not match$',isize_mpi)
+      endif
+
+
 
 c
       PID = 0
@@ -449,6 +467,34 @@ c     Global vector commutative operation using spanning tree.
       endif
 
       call icopy(x,w,n)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine i8gop( x, w, op, n)
+c
+c     Global vector commutative operation
+c
+      include 'mpif.h'
+      common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
+
+      integer*8 x(n), w(n)
+      character*3 op
+
+      if     (op.eq.'+  ') then
+        call mpi_allreduce (x,w,n,mpi_integer8,mpi_sum ,nekcomm,ierr)
+      elseif (op.EQ.'M  ') then
+        call mpi_allreduce (x,w,n,mpi_integer8,mpi_max ,nekcomm,ierr)
+      elseif (op.EQ.'m  ') then
+        call mpi_allreduce (x,w,n,mpi_integer8,mpi_min ,nekcomm,ierr)
+      elseif (op.EQ.'*  ') then
+        call mpi_allreduce (x,w,n,mpi_integer8,mpi_prod,nekcomm,ierr)
+      else
+        write(6,*) nid,' OP ',op,' not supported.  ABORT in igop.'
+        call exitt
+      endif
+
+      call i8copy(x,w,n)
 
       return
       end

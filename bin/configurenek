@@ -113,8 +113,8 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
 
     if not FFLAGS:
         # TODO: Hardcode preprocessor var
-        FFLAGS = ['-I.', '-O3']
-        #FFLAGS = ['-I.', '-O3', '-DPROCMAP', '-DPARRSB', '-DPARMETIS']
+        #FFLAGS = ['-I.', '-O3']
+        FFLAGS = ['-I.', '-O3', '-DPROCMAP', '-DPARRSB', '-DPARMETIS']
         if backend == 'gfortran':
             FFLAGS += ['-DMPI', '-DMPIIO', 
                        '-fdefault-real-8','-fdefault-double-8','-std=legacy']
@@ -131,8 +131,8 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
         FFLAGS = FFLAGS.split()
 
     if not CFLAGS:
-        #CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG', '-DPROCMAP', '-DPARRSB', '-DPARMETIS','-DAMG_DUMP']
-        CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG','-DAMG_DUMP']
+        CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG', '-DPROCMAP', '-DPARRSB', '-DPARMETIS','-DAMG_DUMP']
+        #CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG','-DAMG_DUMP']
         if backend == 'gfortran':
             CFLAGS += ['-DUNDERSCORE', '-DGS_NEW_LOOPS']
         elif backend == 'ifort':

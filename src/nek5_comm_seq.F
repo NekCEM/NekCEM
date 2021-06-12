@@ -1154,12 +1154,46 @@ c-----------------------------------------------------------------------
       subroutine mpi_scan(data1, data2, n, datatype,
      &  operation, comm, ierror )
 
-      integer data1,data2  ! currently hardwired only for integer
+      implicit none
 
-      data2 = data1
+      include "nek5_mpi_dummy.h"
+
+      integer n
+
+      integer comm
+      integer data1(n)
+      integer data2(n)
+      integer datatype
+      integer ierror
+      integer operation    ! currently hardwired only for sum only
+
+      ierror = MPI_SUCCESS
+
+      if ( datatype .eq. mpi_double_precision ) then
+
+        call copy  (  data2, data1, n )
+
+      else if ( datatype .eq. mpi_integer ) then
+
+        call icopy (  data2, data1, n )
+
+      else if ( datatype .eq. mpi_integer8 ) then
+
+        call i8copy ( data2, data1, n )
+
+      else if ( datatype .eq. mpi_real ) then
+
+        call rrcopy ( data2, data1, n )
+
+      else
+
+        ierror = MPI_FAILURE
+
+      end if
 
       return
       end
+
 
 c*********************************************************************72
       subroutine mpi_abort ( comm, errorcode, ierror )
@@ -2215,3 +2249,19 @@ c
       return
       end
 c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+      subroutine mpi_type_get_extent(ikey,ib,isize,ierr)
+
+      include "mpi_dummy.h"
+      integer*8 ib, isize
+
+      if (ikey.eq.MPI_DOUBLE_PRECISION) isize = 8 
+      if (ikey.eq.MPI_INTEGER)  isize = 4 
+      if (ikey.eq.MPI_INTEGER8) isize = 8 
+
+      ierr = 0
+
+      return
+      end
+
+

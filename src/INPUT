@@ -84,9 +84,10 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,NKTONV,NHIS,LOCHIS(4,lhis)
      $               ,IPSCAL,NPSCAL,IPSCO, ifldmhd
      $               ,IRSTV,IRSTT,IRSTIM,NMEMBER(MAXOBJ),NOBJ
-     $               ,IDPSS,NGEOM
+     $               ,IDPSS,NGEOM,meshPartitioner
       integer matype,nktonv,nhis,lochis,ipscal,npscal,ipsco,ifldmhd
       integer irstv,irstt,irstim,nmember,nobj,ngeom,idpss(ldimt)
+      integer meshPartitioner
 
       COMMON /INPUT3/ IF3D
      $               ,IFDG,IFSE,IFHEX,IFTET
@@ -105,7 +106,7 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO 
      $               ,IFCVFLD,IFDP0DT
      $               ,ifxyo_,ifaziv,ifneknek,ifneknekm,ifneknekc
-     $               ,ifmpiio
+     $               ,ifmpiio,ifrich,ifvvisp
       LOGICAL         IF3D
      $               ,IFDG,IFSE,IFHEX,IFTET
      $               ,IFDGFLD(0:LDIMT1),IFDIFF(LDIMT1),IFDEAL(LDIMT1)
@@ -122,7 +123,7 @@ C     INPUT4:  CHARACTER       INPUT8: CHARACTER with LELT entries
      $               ,IFCYCLIC,IFCOUP, IFVCOUP, IFUSERMV,IFREGUO 
      $               ,IFCVFLD(LDIMT1),IFDP0DT
      $               ,ifxyo_,ifaziv,ifneknek,ifneknekm,ifneknekc
-     $               ,ifmpiio
+     $               ,ifmpiio,ifrich,ifvvisp
       LOGICAL         IFNAV        
       EQUIVALENCE    (IFNAV, IFADVC(1))
 

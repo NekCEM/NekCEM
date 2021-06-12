@@ -656,6 +656,9 @@ c-----------------------------------------------------------------------
       integer*8 function i8gl_running_sum(in)
 c
       include 'mpif.h'
+
+      integer*8 in
+
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
       integer status(mpi_status_size)
       integer*8 x,r
