@@ -1369,9 +1369,9 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
       include 'TOTAL'
-      character*132 mapfle
-      character*1   mapfle1(132)
-      equivalence  (mapfle,mapfle1)
+c      character*132 mapfle
+c      character*1   mapfle1(132)
+c      equivalence  (mapfle,mapfle1)
 
       logical ifma2,ifmap
 
@@ -1405,23 +1405,18 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) then
          lfname = ltrunc(reafle,132) - 4
-         call blank (mapfle,132)
-         call chcopy(mapfle,reafle,lfname)
-         call chcopy(mapfle1(lfname+1),'.map',4)
+c         call blank (mapfle,132)
+c         call chcopy(mapfle,reafle,lfname)
+c         call chcopy(mapfle1(lfname+1),'.map',4)
          inquire(file=mapfle, exist=ifmap)
 
          if (.not.ifmap) then
-            call chcopy(mapfle1(lfname+1),'.ma2',4)
-            inquire(file=mapfle, exist=ifma2)
+c            call chcopy(mapfle1(lfname+1),'.ma2',4)
+            inquire(file=ma2fle, exist=ifma2)
          endif
 
         if(.not.ifmap .and. .not.ifma2) ierr = 1 
       endif
-      if(nid.eq.0) write(6,'(A,A)') ' Reading ', mapfle
-      if(nid.eq.0) write(6,*) ' ifma2'
-      if(nid.eq.0) write(6,*) ifma2
-      if(nid.eq.0) write(6,*) ' ifmap'
-      if(nid.eq.0) write(6,*) ifmap
       call err_chk(ierr,' Cannot find map file!$')
       call bcast(ifma2,lsize)
       ierr = 0
@@ -1616,10 +1611,6 @@ c-----------------------------------------------------------------------
       integer neli,nnzi
       integer iok,ierr
 
-      character*132 mapfle
-      character*1   mapfle1(132)
-      equivalence  (mapfle,mapfle1)
-
       character*132 hdr
       character*5   version
       real*4        test
@@ -1629,12 +1620,7 @@ c-----------------------------------------------------------------------
       ierr = 0
       iok = 0
       if (nid.eq.0) then
-         lfname = ltrunc(reafle,132) - 4
-         call blank (mapfle,132)
-         call chcopy(mapfle,reafle,lfname)
-         call chcopy(mapfle1(lfname+1),suffix,4)
-         
-         call byte_open(mapfle,ierr)
+         call byte_open(ma2fle,ierr)
          if(ierr.ne.0) goto 999
 
          call blank(hdr,132)
@@ -1658,6 +1644,7 @@ c-----------------------------------------------------------------------
 
    99 continue
       iok = iglmax(iok,1)
+      if(nid.eq.0) write(6,'(A,A)') ' Reading ', ma2fle
       if (iok.eq.0) goto 999     ! Mapfile not found
 
       if (nid.eq.0) then
@@ -1789,7 +1776,7 @@ c     now: crystal route vertex by processor id
       return
 
   999 continue
-      if (nid.eq.0) write(6,*) 'ABORT: Could not find ma2 file ',mapfle
+      if (nid.eq.0) write(6,*) 'ABORT: Could not find ma2 file ',ma2fle
       call exitt(1)
 
   998 continue
@@ -2009,22 +1996,16 @@ c-----------------------------------------------------------------------
       common /scrns/ wk(mdw,ndw)   ! room for long ints, if desired
       integer wk,e,eg,eg0,eg1
 
-      character*132 mapfle
-      character*1   mapfle1(132)
-      equivalence  (mapfle,mapfle1)
-
       iok = 0
       if (nid.eq.0) then
          lfname = ltrunc(reafle,132) - 4
-         call blank (mapfle,132)
-         call chcopy(mapfle,reafle,lfname)
-         call chcopy(mapfle1(lfname+1),suffix,4)
          open(unit=80,file=mapfle,status='old',err=99)
          read(80,*,err=99) neli,nnzi
          iok = 1
       endif
    99 continue
       iok = iglmax(iok,1)
+      if(nid.eq.0) write(6,'(A,A)') ' Reading ', mapfle
       if (iok.eq.0) goto 999     ! Mapfile not found
 
       if (nid.eq.0) then
@@ -3519,13 +3500,13 @@ c-----------------------------------------------------------------------
       integer vertex(nlv,nel)
       character*4 suffix
 c
-      character*132 mapfle
-      character*1   mapfle1(132)
-      equivalence  (mapfle,mapfle1)
+c      character*132 mapfle
+c      character*1   mapfle1(132)
+c      equivalence  (mapfle,mapfle1)
 c
-      lfname = ltrunc(reafle,132) - 4
-      call chcopy(mapfle,reafle,lfname)
-      call chcopy(mapfle1(lfname+1),suffix,4)
+c      lfname = ltrunc(reafle,132) - 4
+c      call chcopy(mapfle,reafle,lfname)
+c      call chcopy(mapfle1(lfname+1),suffix,4)
 c
       write(6,*) 'lfname:',lfname
       write(6,*) 'suffix:',suffix
