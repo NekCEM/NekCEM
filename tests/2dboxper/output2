@@ -1,0 +1,2684 @@
+general = [(null)]
+general:stopat = [numSteps]
+general:numsteps = [1000]
+general:dt = [5e-02]
+general:timestepper = [rk54]
+general:writeinterval = [0]
+problemtype = [(null)]
+problemtype:equation = [maxwell]
+electric = [(null)]
+electric:permittivity = [1]
+magnetic = [(null)]
+magnetic:permeability = [1]
+ Reading session file ...
+ Number of sessions   :           1
+/----------------------------------------------------------\\
+|      _   __ ______ __ __  ______  ______   __  _____     |
+|     / | / // ____// //_/ / ____/ / __ _ / / _|/ __  /    |
+|    /  |/ // __/  / ,<   / /     / /__/   / / / / / /     |
+|   / /|  // /___ / /| | / /_ _  / /___   /_/ / / / /      |
+|  /_/ |_//_____//_/ |_|/_____/ /______/ /_/ /_/ /_/       |
+|                                                          |
+|----------------------------------------------------------|
+|                                                          |
+| NekCEM :  Nek5000 for Computational Electromagnetics     |
+|           Open-Source Spectral-Element DG Maxwell Solver |
+| Source :  https://svn.mcs.anl.gov/repos/NEKCEM           |
+|                                                          |
+\\----------------------------------------------------------/
+                                                              
+
+ Number of processors:           1
+ REAL    wdsize      :           8
+ INTEGER wdsize      :           4
+ Timer accuracy      : 1.00E-07
+  
+   Mesh options: 
+   ifhex =  T  (hexahedral)
+   iftet =  F  (tetrahedral)
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.par                                                                  
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.re2                                                                  
+ call   mapelpr, mapping elements to processors           9
+ Calling set_proc_map (Nek5000)
+ Calling read_re2_data
+ done :: read .re2 file    0.40E-04 sec
+
+ Calling get_map()
+ get_vert, ncrnr=           4
+  Call get_vert_map (with .map/.ma2)
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.ma2                                                                  
+  ifma2
+ T
+  ifmap
+ F
+  get_vert_map using .map or .ma2
+  version,neli,nnzi:#v001           9           9
+  Finish reading ma2 header
+  Start loop
+  Start reading ma2
+ m     1
+           1           7           9           8           7           6
+           7           9           8           7           6
+ m     2
+           2           6           7           6           5           4
+           6           7           6           5           4
+ m     3
+           3           7           5           4           9           8
+           7           5           4           9           8
+ m     4
+           4           5           3           9           2           7
+           5           3           9           2           7
+ m     5
+           5           2           2           7           1           5
+           2           2           7           1           5
+ m     6
+           6           3           1           5           3           9
+           3           1           5           3           9
+ m     7
+           7           4           8           3           6           2
+           4           8           3           6           2
+ m     8
+           8           0           6           2           4           1
+           0           6           2           4           1
+ m     9
+           9           1           4           1           8           3
+           1           4           1           8           3
+ ifgfdm F
+           0           9           9           9           9 NELV
+ Compute global to local map(no proc)
+ global to local map (all proc)
+ local to global map
+ done:: set_proc_map() (Nek5000)
+ RANK     0 IEG       1       2       3       4       5       6       7       8
+                      9
+ element load imbalance:            0           9           9
+ done :: mapelpr, mapping elements to processors
+ done :: read .re2 file    0.56E-04 sec
+
+ iffilter     F
+ ifpoisson    F
+ ifgmres      F
+ ifcg         F
+ ifsemg       F
+ iffdm        F
+ ific         F
+ ifsol        F
+ ifsrc        F
+ ifcentral    F
+ ifupwind     T
+ ifdealias    F
+ iftm         F
+ ifte         T
+ ifeig        F
+ ifexp        F
+ ifrk45       T
+ ifrk22       F
+ ifpec        F
+ ifrob        F
+ ifneu        F
+ ifinhom      F
+ ifpml        F
+ ifdtn        F
+ ifrestart    F
+ param(17): defined as    0.0000000000000000     
+ setup mesh topology
+   Right-handed check complete for   9 elements. OK.
+   setvert2d:   9         135         576         135         135
+   setupds time 3.0700E-04 seconds   0  9         135           9
+ 
+ 
+ done :: setup mesh topology
+  
+ ifflow/ifheat/nfield F F           0
+ ifield0/nfld           1           0
+ Vol:   8999999.9999999907        8999999.9999999907     
+ this is bm2:   3.0035086569440383E-002
+ Vol:   39.478417604357404        39.478417604357404     
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    1
+  Near X =   0.0000000       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    1
+  Near X =   0.0000000       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    1
+  Near X =   0.0000000       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    1
+  Near X =   0.0000000       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    1
+  Near X =   0.0000000       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    1
+  Near X =   0.0000000      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    1
+  Near X =   0.0000000      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    1
+  Near X =   0.0000000      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    1
+  Near X =   0.0000000       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    1
+  Near X =  0.10497318       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    1
+  Near X =  0.10497318       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    1
+  Near X =  0.10497318       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    1
+  Near X =  0.10497318       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    1
+  Near X =  0.10497318       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    1
+  Near X =  0.10497318      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    1
+  Near X =  0.10497318      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    1
+  Near X =  0.10497318      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    1
+  Near X =  0.10497318       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    1
+  Near X =  0.33804974       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    1
+  Near X =  0.33804974       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    1
+  Near X =  0.33804974       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    1
+  Near X =  0.33804974       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    1
+  Near X =  0.33804974       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    1
+  Near X =  0.33804974      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    1
+  Near X =  0.33804974      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    1
+  Near X =  0.33804974      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    1
+  Near X =  0.33804974       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    1
+  Near X =  0.66694183       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    1
+  Near X =  0.66694183       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    1
+  Near X =  0.66694183       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    1
+  Near X =  0.66694183       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    1
+  Near X =  0.66694183       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    1
+  Near X =  0.66694183      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    1
+  Near X =  0.66694183      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    1
+  Near X =  0.66694183      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    1
+  Near X =  0.66694183       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    1
+  Near X =   1.0471976       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    1
+  Near X =   1.0471976       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    1
+  Near X =   1.0471976       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    1
+  Near X =   1.0471976       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    1
+  Near X =   1.0471976       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    1
+  Near X =   1.0471976      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    1
+  Near X =   1.0471976      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    1
+  Near X =   1.0471976      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    1
+  Near X =   1.0471976       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    1
+  Near X =   1.4274533       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    1
+  Near X =   1.4274533       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    1
+  Near X =   1.4274533       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    1
+  Near X =   1.4274533       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    1
+  Near X =   1.4274533       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    1
+  Near X =   1.4274533      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    1
+  Near X =   1.4274533      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    1
+  Near X =   1.4274533      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    1
+  Near X =   1.4274533       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    1
+  Near X =   1.7563454       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    1
+  Near X =   1.7563454       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    1
+  Near X =   1.7563454       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    1
+  Near X =   1.7563454       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    1
+  Near X =   1.7563454       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    1
+  Near X =   1.7563454      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    1
+  Near X =   1.7563454      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    1
+  Near X =   1.7563454      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    1
+  Near X =   1.7563454       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    1
+  Near X =   1.9894219       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    1
+  Near X =   1.9894219       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    1
+  Near X =   1.9894219       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    1
+  Near X =   1.9894219       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    1
+  Near X =   1.9894219       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    1
+  Near X =   1.9894219      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    1
+  Near X =   1.9894219      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    1
+  Near X =   1.9894219      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    1
+  Near X =   1.9894219       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    1
+  Near X =   2.0943951       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    1
+  Near X =   2.0943951       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    1
+  Near X =   2.0943951       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    1
+  Near X =   2.0943951       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    1
+  Near X =   2.0943951       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    1
+  Near X =   2.0943951      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    1
+  Near X =   2.0943951      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    1
+  Near X =   2.0943951      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    1
+  Near X =   2.0943951       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    2
+  Near X =   2.0943951       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    2
+  Near X =   2.0943951       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    2
+  Near X =   2.0943951       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    2
+  Near X =   2.0943951       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    2
+  Near X =   2.0943951       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    2
+  Near X =   2.0943951      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    2
+  Near X =   2.0943951      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    2
+  Near X =   2.0943951      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    2
+  Near X =   2.0943951       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    2
+  Near X =   2.1993683       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    2
+  Near X =   2.1993683       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    2
+  Near X =   2.1993683       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    2
+  Near X =   2.1993683       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    2
+  Near X =   2.1993683       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    2
+  Near X =   2.1993683      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    2
+  Near X =   2.1993683      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    2
+  Near X =   2.1993683      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    2
+  Near X =   2.1993683       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    2
+  Near X =   2.4324448       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    2
+  Near X =   2.4324448       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    2
+  Near X =   2.4324448       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    2
+  Near X =   2.4324448       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    2
+  Near X =   2.4324448       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    2
+  Near X =   2.4324448      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    2
+  Near X =   2.4324448      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    2
+  Near X =   2.4324448      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    2
+  Near X =   2.4324448       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    2
+  Near X =   2.7613369       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    2
+  Near X =   2.7613369       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    2
+  Near X =   2.7613369       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    2
+  Near X =   2.7613369       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    2
+  Near X =   2.7613369       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    2
+  Near X =   2.7613369      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    2
+  Near X =   2.7613369      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    2
+  Near X =   2.7613369      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    2
+  Near X =   2.7613369       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    2
+  Near X =   3.1415927       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    2
+  Near X =   3.1415927       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    2
+  Near X =   3.1415927       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    2
+  Near X =   3.1415927       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    2
+  Near X =   3.1415927       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    2
+  Near X =   3.1415927      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    2
+  Near X =   3.1415927      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    2
+  Near X =   3.1415927      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    2
+  Near X =   3.1415927       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    2
+  Near X =   3.5218484       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    2
+  Near X =   3.5218484       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    2
+  Near X =   3.5218484       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    2
+  Near X =   3.5218484       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    2
+  Near X =   3.5218484       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    2
+  Near X =   3.5218484      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    2
+  Near X =   3.5218484      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    2
+  Near X =   3.5218484      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    2
+  Near X =   3.5218484       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    2
+  Near X =   3.8507405       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    2
+  Near X =   3.8507405       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    2
+  Near X =   3.8507405       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    2
+  Near X =   3.8507405       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    2
+  Near X =   3.8507405       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    2
+  Near X =   3.8507405      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    2
+  Near X =   3.8507405      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    2
+  Near X =   3.8507405      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    2
+  Near X =   3.8507405       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    2
+  Near X =   4.0838170       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    2
+  Near X =   4.0838170       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    2
+  Near X =   4.0838170       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    2
+  Near X =   4.0838170       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    2
+  Near X =   4.0838170       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    2
+  Near X =   4.0838170      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    2
+  Near X =   4.0838170      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    2
+  Near X =   4.0838170      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    2
+  Near X =   4.0838170       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    2
+  Near X =   4.1887902       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    2
+  Near X =   4.1887902       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    2
+  Near X =   4.1887902       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    2
+  Near X =   4.1887902       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    2
+  Near X =   4.1887902       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    2
+  Near X =   4.1887902      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    2
+  Near X =   4.1887902      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    2
+  Near X =   4.1887902      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    2
+  Near X =   4.1887902       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    3
+  Near X =   4.1887902       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    3
+  Near X =   4.1887902       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    3
+  Near X =   4.1887902       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    3
+  Near X =   4.1887902       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    3
+  Near X =   4.1887902       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    3
+  Near X =   4.1887902      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    3
+  Near X =   4.1887902      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    3
+  Near X =   4.1887902      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    3
+  Near X =   4.1887902       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    3
+  Near X =   4.2937634       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    3
+  Near X =   4.2937634       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    3
+  Near X =   4.2937634       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    3
+  Near X =   4.2937634       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    3
+  Near X =   4.2937634       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    3
+  Near X =   4.2937634      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    3
+  Near X =   4.2937634      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    3
+  Near X =   4.2937634      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    3
+  Near X =   4.2937634       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    3
+  Near X =   4.5268399       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    3
+  Near X =   4.5268399       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    3
+  Near X =   4.5268399       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    3
+  Near X =   4.5268399       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    3
+  Near X =   4.5268399       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    3
+  Near X =   4.5268399      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    3
+  Near X =   4.5268399      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    3
+  Near X =   4.5268399      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    3
+  Near X =   4.5268399       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    3
+  Near X =   4.8557320       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    3
+  Near X =   4.8557320       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    3
+  Near X =   4.8557320       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    3
+  Near X =   4.8557320       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    3
+  Near X =   4.8557320       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    3
+  Near X =   4.8557320      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    3
+  Near X =   4.8557320      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    3
+  Near X =   4.8557320      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    3
+  Near X =   4.8557320       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    3
+  Near X =   5.2359878       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    3
+  Near X =   5.2359878       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    3
+  Near X =   5.2359878       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    3
+  Near X =   5.2359878       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    3
+  Near X =   5.2359878       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    3
+  Near X =   5.2359878      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    3
+  Near X =   5.2359878      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    3
+  Near X =   5.2359878      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    3
+  Near X =   5.2359878       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    3
+  Near X =   5.6162435       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    3
+  Near X =   5.6162435       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    3
+  Near X =   5.6162435       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    3
+  Near X =   5.6162435       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    3
+  Near X =   5.6162435       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    3
+  Near X =   5.6162435      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    3
+  Near X =   5.6162435      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    3
+  Near X =   5.6162435      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    3
+  Near X =   5.6162435       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    3
+  Near X =   5.9451356       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    3
+  Near X =   5.9451356       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    3
+  Near X =   5.9451356       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    3
+  Near X =   5.9451356       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    3
+  Near X =   5.9451356       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    3
+  Near X =   5.9451356      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    3
+  Near X =   5.9451356      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    3
+  Near X =   5.9451356      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    3
+  Near X =   5.9451356       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    3
+  Near X =   6.1782121       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    3
+  Near X =   6.1782121       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    3
+  Near X =   6.1782121       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    3
+  Near X =   6.1782121       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    3
+  Near X =   6.1782121       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    3
+  Near X =   6.1782121      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    3
+  Near X =   6.1782121      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    3
+  Near X =   6.1782121      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    3
+  Near X =   6.1782121       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    3
+  Near X =   6.2831853       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    3
+  Near X =   6.2831853       1.9894219       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    3
+  Near X =   6.2831853       1.7563454       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    3
+  Near X =   6.2831853       1.4274533       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    3
+  Near X =   6.2831853       1.0471976       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    3
+  Near X =   6.2831853      0.66694183       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    3
+  Near X =   6.2831853      0.33804974       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    3
+  Near X =   6.2831853      0.10497318       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    3
+  Near X =   6.2831853       0.0000000       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    4
+  Near X =   0.0000000       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    4
+  Near X =   0.0000000       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    4
+  Near X =   0.0000000       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    4
+  Near X =   0.0000000       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    4
+  Near X =   0.0000000       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    4
+  Near X =   0.0000000       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    4
+  Near X =   0.0000000       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    4
+  Near X =   0.0000000       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    4
+  Near X =   0.0000000       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    4
+  Near X =  0.10497318       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    4
+  Near X =  0.10497318       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    4
+  Near X =  0.10497318       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    4
+  Near X =  0.10497318       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    4
+  Near X =  0.10497318       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    4
+  Near X =  0.10497318       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    4
+  Near X =  0.10497318       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    4
+  Near X =  0.10497318       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    4
+  Near X =  0.10497318       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    4
+  Near X =  0.33804974       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    4
+  Near X =  0.33804974       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    4
+  Near X =  0.33804974       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    4
+  Near X =  0.33804974       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    4
+  Near X =  0.33804974       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    4
+  Near X =  0.33804974       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    4
+  Near X =  0.33804974       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    4
+  Near X =  0.33804974       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    4
+  Near X =  0.33804974       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    4
+  Near X =  0.66694183       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    4
+  Near X =  0.66694183       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    4
+  Near X =  0.66694183       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    4
+  Near X =  0.66694183       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    4
+  Near X =  0.66694183       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    4
+  Near X =  0.66694183       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    4
+  Near X =  0.66694183       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    4
+  Near X =  0.66694183       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    4
+  Near X =  0.66694183       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    4
+  Near X =   1.0471976       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    4
+  Near X =   1.0471976       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    4
+  Near X =   1.0471976       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    4
+  Near X =   1.0471976       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    4
+  Near X =   1.0471976       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    4
+  Near X =   1.0471976       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    4
+  Near X =   1.0471976       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    4
+  Near X =   1.0471976       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    4
+  Near X =   1.0471976       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    4
+  Near X =   1.4274533       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    4
+  Near X =   1.4274533       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    4
+  Near X =   1.4274533       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    4
+  Near X =   1.4274533       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    4
+  Near X =   1.4274533       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    4
+  Near X =   1.4274533       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    4
+  Near X =   1.4274533       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    4
+  Near X =   1.4274533       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    4
+  Near X =   1.4274533       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    4
+  Near X =   1.7563454       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    4
+  Near X =   1.7563454       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    4
+  Near X =   1.7563454       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    4
+  Near X =   1.7563454       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    4
+  Near X =   1.7563454       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    4
+  Near X =   1.7563454       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    4
+  Near X =   1.7563454       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    4
+  Near X =   1.7563454       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    4
+  Near X =   1.7563454       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    4
+  Near X =   1.9894219       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    4
+  Near X =   1.9894219       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    4
+  Near X =   1.9894219       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    4
+  Near X =   1.9894219       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    4
+  Near X =   1.9894219       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    4
+  Near X =   1.9894219       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    4
+  Near X =   1.9894219       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    4
+  Near X =   1.9894219       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    4
+  Near X =   1.9894219       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    4
+  Near X =   2.0943951       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    4
+  Near X =   2.0943951       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    4
+  Near X =   2.0943951       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    4
+  Near X =   2.0943951       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    4
+  Near X =   2.0943951       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    4
+  Near X =   2.0943951       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    4
+  Near X =   2.0943951       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    4
+  Near X =   2.0943951       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    4
+  Near X =   2.0943951       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    5
+  Near X =   2.0943951       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    5
+  Near X =   2.0943951       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    5
+  Near X =   2.0943951       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    5
+  Near X =   2.0943951       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    5
+  Near X =   2.0943951       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    5
+  Near X =   2.0943951       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    5
+  Near X =   2.0943951       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    5
+  Near X =   2.0943951       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    5
+  Near X =   2.0943951       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    5
+  Near X =   2.1993683       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    5
+  Near X =   2.1993683       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    5
+  Near X =   2.1993683       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    5
+  Near X =   2.1993683       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    5
+  Near X =   2.1993683       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    5
+  Near X =   2.1993683       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    5
+  Near X =   2.1993683       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    5
+  Near X =   2.1993683       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    5
+  Near X =   2.1993683       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    5
+  Near X =   2.4324448       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    5
+  Near X =   2.4324448       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    5
+  Near X =   2.4324448       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    5
+  Near X =   2.4324448       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    5
+  Near X =   2.4324448       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    5
+  Near X =   2.4324448       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    5
+  Near X =   2.4324448       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    5
+  Near X =   2.4324448       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    5
+  Near X =   2.4324448       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    5
+  Near X =   2.7613369       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    5
+  Near X =   2.7613369       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    5
+  Near X =   2.7613369       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    5
+  Near X =   2.7613369       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    5
+  Near X =   2.7613369       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    5
+  Near X =   2.7613369       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    5
+  Near X =   2.7613369       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    5
+  Near X =   2.7613369       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    5
+  Near X =   2.7613369       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    5
+  Near X =   3.1415927       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    5
+  Near X =   3.1415927       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    5
+  Near X =   3.1415927       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    5
+  Near X =   3.1415927       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    5
+  Near X =   3.1415927       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    5
+  Near X =   3.1415927       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    5
+  Near X =   3.1415927       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    5
+  Near X =   3.1415927       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    5
+  Near X =   3.1415927       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    5
+  Near X =   3.5218484       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    5
+  Near X =   3.5218484       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    5
+  Near X =   3.5218484       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    5
+  Near X =   3.5218484       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    5
+  Near X =   3.5218484       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    5
+  Near X =   3.5218484       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    5
+  Near X =   3.5218484       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    5
+  Near X =   3.5218484       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    5
+  Near X =   3.5218484       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    5
+  Near X =   3.8507405       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    5
+  Near X =   3.8507405       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    5
+  Near X =   3.8507405       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    5
+  Near X =   3.8507405       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    5
+  Near X =   3.8507405       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    5
+  Near X =   3.8507405       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    5
+  Near X =   3.8507405       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    5
+  Near X =   3.8507405       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    5
+  Near X =   3.8507405       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    5
+  Near X =   4.0838170       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    5
+  Near X =   4.0838170       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    5
+  Near X =   4.0838170       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    5
+  Near X =   4.0838170       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    5
+  Near X =   4.0838170       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    5
+  Near X =   4.0838170       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    5
+  Near X =   4.0838170       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    5
+  Near X =   4.0838170       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    5
+  Near X =   4.0838170       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    5
+  Near X =   4.1887902       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    5
+  Near X =   4.1887902       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    5
+  Near X =   4.1887902       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    5
+  Near X =   4.1887902       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    5
+  Near X =   4.1887902       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    5
+  Near X =   4.1887902       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    5
+  Near X =   4.1887902       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    5
+  Near X =   4.1887902       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    5
+  Near X =   4.1887902       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    6
+  Near X =   4.1887902       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    6
+  Near X =   4.1887902       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    6
+  Near X =   4.1887902       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    6
+  Near X =   4.1887902       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    6
+  Near X =   4.1887902       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    6
+  Near X =   4.1887902       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    6
+  Near X =   4.1887902       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    6
+  Near X =   4.1887902       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    6
+  Near X =   4.1887902       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    6
+  Near X =   4.2937634       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    6
+  Near X =   4.2937634       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    6
+  Near X =   4.2937634       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    6
+  Near X =   4.2937634       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    6
+  Near X =   4.2937634       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    6
+  Near X =   4.2937634       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    6
+  Near X =   4.2937634       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    6
+  Near X =   4.2937634       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    6
+  Near X =   4.2937634       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    6
+  Near X =   4.5268399       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    6
+  Near X =   4.5268399       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    6
+  Near X =   4.5268399       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    6
+  Near X =   4.5268399       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    6
+  Near X =   4.5268399       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    6
+  Near X =   4.5268399       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    6
+  Near X =   4.5268399       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    6
+  Near X =   4.5268399       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    6
+  Near X =   4.5268399       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    6
+  Near X =   4.8557320       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    6
+  Near X =   4.8557320       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    6
+  Near X =   4.8557320       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    6
+  Near X =   4.8557320       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    6
+  Near X =   4.8557320       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    6
+  Near X =   4.8557320       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    6
+  Near X =   4.8557320       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    6
+  Near X =   4.8557320       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    6
+  Near X =   4.8557320       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    6
+  Near X =   5.2359878       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    6
+  Near X =   5.2359878       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    6
+  Near X =   5.2359878       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    6
+  Near X =   5.2359878       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    6
+  Near X =   5.2359878       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    6
+  Near X =   5.2359878       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    6
+  Near X =   5.2359878       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    6
+  Near X =   5.2359878       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    6
+  Near X =   5.2359878       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    6
+  Near X =   5.6162435       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    6
+  Near X =   5.6162435       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    6
+  Near X =   5.6162435       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    6
+  Near X =   5.6162435       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    6
+  Near X =   5.6162435       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    6
+  Near X =   5.6162435       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    6
+  Near X =   5.6162435       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    6
+  Near X =   5.6162435       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    6
+  Near X =   5.6162435       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    6
+  Near X =   5.9451356       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    6
+  Near X =   5.9451356       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    6
+  Near X =   5.9451356       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    6
+  Near X =   5.9451356       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    6
+  Near X =   5.9451356       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    6
+  Near X =   5.9451356       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    6
+  Near X =   5.9451356       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    6
+  Near X =   5.9451356       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    6
+  Near X =   5.9451356       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    6
+  Near X =   6.1782121       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    6
+  Near X =   6.1782121       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    6
+  Near X =   6.1782121       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    6
+  Near X =   6.1782121       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    6
+  Near X =   6.1782121       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    6
+  Near X =   6.1782121       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    6
+  Near X =   6.1782121       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    6
+  Near X =   6.1782121       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    6
+  Near X =   6.1782121       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    6
+  Near X =   6.2831853       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    6
+  Near X =   6.2831853       4.0838170       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    6
+  Near X =   6.2831853       3.8507405       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    6
+  Near X =   6.2831853       3.5218484       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    6
+  Near X =   6.2831853       3.1415927       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    6
+  Near X =   6.2831853       2.7613369       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    6
+  Near X =   6.2831853       2.4324448       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    6
+  Near X =   6.2831853       2.1993683       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    6
+  Near X =   6.2831853       2.0943951       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    7
+  Near X =   0.0000000       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    7
+  Near X =   0.0000000       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    7
+  Near X =   0.0000000       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    7
+  Near X =   0.0000000       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    7
+  Near X =   0.0000000       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    7
+  Near X =   0.0000000       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    7
+  Near X =   0.0000000       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    7
+  Near X =   0.0000000       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    7
+  Near X =   0.0000000       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    7
+  Near X =  0.10497318       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    7
+  Near X =  0.10497318       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    7
+  Near X =  0.10497318       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    7
+  Near X =  0.10497318       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    7
+  Near X =  0.10497318       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    7
+  Near X =  0.10497318       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    7
+  Near X =  0.10497318       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    7
+  Near X =  0.10497318       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    7
+  Near X =  0.10497318       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    7
+  Near X =  0.33804974       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    7
+  Near X =  0.33804974       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    7
+  Near X =  0.33804974       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    7
+  Near X =  0.33804974       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    7
+  Near X =  0.33804974       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    7
+  Near X =  0.33804974       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    7
+  Near X =  0.33804974       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    7
+  Near X =  0.33804974       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    7
+  Near X =  0.33804974       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    7
+  Near X =  0.66694183       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    7
+  Near X =  0.66694183       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    7
+  Near X =  0.66694183       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    7
+  Near X =  0.66694183       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    7
+  Near X =  0.66694183       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    7
+  Near X =  0.66694183       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    7
+  Near X =  0.66694183       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    7
+  Near X =  0.66694183       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    7
+  Near X =  0.66694183       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    7
+  Near X =   1.0471976       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    7
+  Near X =   1.0471976       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    7
+  Near X =   1.0471976       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    7
+  Near X =   1.0471976       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    7
+  Near X =   1.0471976       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    7
+  Near X =   1.0471976       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    7
+  Near X =   1.0471976       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    7
+  Near X =   1.0471976       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    7
+  Near X =   1.0471976       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    7
+  Near X =   1.4274533       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    7
+  Near X =   1.4274533       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    7
+  Near X =   1.4274533       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    7
+  Near X =   1.4274533       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    7
+  Near X =   1.4274533       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    7
+  Near X =   1.4274533       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    7
+  Near X =   1.4274533       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    7
+  Near X =   1.4274533       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    7
+  Near X =   1.4274533       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    7
+  Near X =   1.7563454       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    7
+  Near X =   1.7563454       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    7
+  Near X =   1.7563454       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    7
+  Near X =   1.7563454       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    7
+  Near X =   1.7563454       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    7
+  Near X =   1.7563454       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    7
+  Near X =   1.7563454       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    7
+  Near X =   1.7563454       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    7
+  Near X =   1.7563454       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    7
+  Near X =   1.9894219       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    7
+  Near X =   1.9894219       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    7
+  Near X =   1.9894219       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    7
+  Near X =   1.9894219       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    7
+  Near X =   1.9894219       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    7
+  Near X =   1.9894219       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    7
+  Near X =   1.9894219       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    7
+  Near X =   1.9894219       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    7
+  Near X =   1.9894219       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    7
+  Near X =   2.0943951       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    7
+  Near X =   2.0943951       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    7
+  Near X =   2.0943951       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    7
+  Near X =   2.0943951       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    7
+  Near X =   2.0943951       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    7
+  Near X =   2.0943951       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    7
+  Near X =   2.0943951       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    7
+  Near X =   2.0943951       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    7
+  Near X =   2.0943951       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    8
+  Near X =   2.0943951       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    8
+  Near X =   2.0943951       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    8
+  Near X =   2.0943951       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    8
+  Near X =   2.0943951       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    8
+  Near X =   2.0943951       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    8
+  Near X =   2.0943951       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    8
+  Near X =   2.0943951       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    8
+  Near X =   2.0943951       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    8
+  Near X =   2.0943951       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    8
+  Near X =   2.1993683       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    8
+  Near X =   2.1993683       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    8
+  Near X =   2.1993683       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    8
+  Near X =   2.1993683       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    8
+  Near X =   2.1993683       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    8
+  Near X =   2.1993683       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    8
+  Near X =   2.1993683       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    8
+  Near X =   2.1993683       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    8
+  Near X =   2.1993683       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    8
+  Near X =   2.4324448       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    8
+  Near X =   2.4324448       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    8
+  Near X =   2.4324448       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    8
+  Near X =   2.4324448       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    8
+  Near X =   2.4324448       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    8
+  Near X =   2.4324448       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    8
+  Near X =   2.4324448       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    8
+  Near X =   2.4324448       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    8
+  Near X =   2.4324448       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    8
+  Near X =   2.7613369       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    8
+  Near X =   2.7613369       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    8
+  Near X =   2.7613369       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    8
+  Near X =   2.7613369       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    8
+  Near X =   2.7613369       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    8
+  Near X =   2.7613369       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    8
+  Near X =   2.7613369       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    8
+  Near X =   2.7613369       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    8
+  Near X =   2.7613369       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    8
+  Near X =   3.1415927       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    8
+  Near X =   3.1415927       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    8
+  Near X =   3.1415927       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    8
+  Near X =   3.1415927       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    8
+  Near X =   3.1415927       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    8
+  Near X =   3.1415927       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    8
+  Near X =   3.1415927       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    8
+  Near X =   3.1415927       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    8
+  Near X =   3.1415927       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    8
+  Near X =   3.5218484       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    8
+  Near X =   3.5218484       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    8
+  Near X =   3.5218484       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    8
+  Near X =   3.5218484       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    8
+  Near X =   3.5218484       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    8
+  Near X =   3.5218484       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    8
+  Near X =   3.5218484       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    8
+  Near X =   3.5218484       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    8
+  Near X =   3.5218484       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    8
+  Near X =   3.8507405       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    8
+  Near X =   3.8507405       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    8
+  Near X =   3.8507405       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    8
+  Near X =   3.8507405       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    8
+  Near X =   3.8507405       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    8
+  Near X =   3.8507405       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    8
+  Near X =   3.8507405       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    8
+  Near X =   3.8507405       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    8
+  Near X =   3.8507405       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    8
+  Near X =   4.0838170       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    8
+  Near X =   4.0838170       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    8
+  Near X =   4.0838170       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    8
+  Near X =   4.0838170       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    8
+  Near X =   4.0838170       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    8
+  Near X =   4.0838170       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    8
+  Near X =   4.0838170       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    8
+  Near X =   4.0838170       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    8
+  Near X =   4.0838170       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    8
+  Near X =   4.1887902       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    8
+  Near X =   4.1887902       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    8
+  Near X =   4.1887902       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    8
+  Near X =   4.1887902       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    8
+  Near X =   4.1887902       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    8
+  Near X =   4.1887902       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    8
+  Near X =   4.1887902       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    8
+  Near X =   4.1887902       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    8
+  Near X =   4.1887902       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    1    1    9
+  Near X =   4.1887902       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    1    1    9
+  Near X =   4.1887902       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    1    1    9
+  Near X =   4.1887902       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    1    1    9
+  Near X =   4.1887902       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    1    1    9
+  Near X =   4.1887902       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    1    1    9
+  Near X =   4.1887902       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    1    1    9
+  Near X =   4.1887902       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    1    1    9
+  Near X =   4.1887902       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    1    1    9
+  Near X =   4.1887902       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    2    1    9
+  Near X =   4.2937634       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    2    1    9
+  Near X =   4.2937634       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    2    1    9
+  Near X =   4.2937634       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    2    1    9
+  Near X =   4.2937634       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    2    1    9
+  Near X =   4.2937634       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    2    1    9
+  Near X =   4.2937634       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    2    1    9
+  Near X =   4.2937634       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    2    1    9
+  Near X =   4.2937634       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    2    1    9
+  Near X =   4.2937634       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    3    1    9
+  Near X =   4.5268399       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    3    1    9
+  Near X =   4.5268399       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    3    1    9
+  Near X =   4.5268399       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    3    1    9
+  Near X =   4.5268399       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    3    1    9
+  Near X =   4.5268399       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    3    1    9
+  Near X =   4.5268399       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    3    1    9
+  Near X =   4.5268399       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    3    1    9
+  Near X =   4.5268399       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    3    1    9
+  Near X =   4.5268399       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    4    1    9
+  Near X =   4.8557320       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    4    1    9
+  Near X =   4.8557320       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    4    1    9
+  Near X =   4.8557320       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    4    1    9
+  Near X =   4.8557320       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    4    1    9
+  Near X =   4.8557320       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    4    1    9
+  Near X =   4.8557320       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    4    1    9
+  Near X =   4.8557320       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    4    1    9
+  Near X =   4.8557320       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    4    1    9
+  Near X =   4.8557320       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    5    1    9
+  Near X =   5.2359878       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    5    1    9
+  Near X =   5.2359878       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    5    1    9
+  Near X =   5.2359878       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    5    1    9
+  Near X =   5.2359878       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    5    1    9
+  Near X =   5.2359878       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    5    1    9
+  Near X =   5.2359878       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    5    1    9
+  Near X =   5.2359878       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    5    1    9
+  Near X =   5.2359878       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    5    1    9
+  Near X =   5.2359878       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    6    1    9
+  Near X =   5.6162435       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    6    1    9
+  Near X =   5.6162435       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    6    1    9
+  Near X =   5.6162435       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    6    1    9
+  Near X =   5.6162435       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    6    1    9
+  Near X =   5.6162435       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    6    1    9
+  Near X =   5.6162435       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    6    1    9
+  Near X =   5.6162435       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    6    1    9
+  Near X =   5.6162435       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    6    1    9
+  Near X =   5.6162435       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    7    1    9
+  Near X =   5.9451356       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    7    1    9
+  Near X =   5.9451356       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    7    1    9
+  Near X =   5.9451356       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    7    1    9
+  Near X =   5.9451356       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    7    1    9
+  Near X =   5.9451356       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    7    1    9
+  Near X =   5.9451356       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    7    1    9
+  Near X =   5.9451356       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    7    1    9
+  Near X =   5.9451356       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    7    1    9
+  Near X =   5.9451356       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    8    1    9
+  Near X =   6.1782121       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    8    1    9
+  Near X =   6.1782121       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    8    1    9
+  Near X =   6.1782121       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    8    1    9
+  Near X =   6.1782121       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    8    1    9
+  Near X =   6.1782121       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    8    1    9
+  Near X =   6.1782121       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    8    1    9
+  Near X =   6.1782121       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    8    1    9
+  Near X =   6.1782121       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    8    1    9
+  Near X =   6.1782121       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    1    9    1    9
+  Near X =   6.2831853       6.2831853       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    2    9    1    9
+  Near X =   6.2831853       6.1782121       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    3    9    1    9
+  Near X =   6.2831853       5.9451356       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    4    9    1    9
+  Near X =   6.2831853       5.6162435       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    5    9    1    9
+  Near X =   6.2831853       5.2359878       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    6    9    1    9
+  Near X =   6.2831853       4.8557320       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    7    9    1    9
+  Near X =   6.2831853       4.5268399       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    8    9    1    9
+  Near X =   6.2831853       4.2937634       0.0000000    , d:   0.0000000      0.10000000E-03
+  WARNING: DSSUM problem at:
+  I,J,K,IE:    9    9    1    9
+  Near X =   6.2831853       4.1887902       0.0000000    , d:   0.0000000      0.10000000E-03
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    1
+ Near X =   0.0000000       2.0943951       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    1    1    1
+ Near X =   0.0000000       1.9894219       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    1    1    1
+ Near X =   0.0000000       1.7563454       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    1    1    1
+ Near X =   0.0000000       1.4274533       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    1    1    1
+ Near X =   0.0000000       1.0471976       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    1    1    1
+ Near X =   0.0000000      0.66694183       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    1    1    1
+ Near X =   0.0000000      0.33804974       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    1    1    1
+ Near X =   0.0000000      0.10497318       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    1
+ Near X =   0.0000000       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    3
+ Near X =   6.2831853       2.0943951       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    9    1    3
+ Near X =   6.2831853       1.9894219       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    9    1    3
+ Near X =   6.2831853       1.7563454       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    9    1    3
+ Near X =   6.2831853       1.4274533       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    9    1    3
+ Near X =   6.2831853       1.0471976       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    9    1    3
+ Near X =   6.2831853      0.66694183       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    9    1    3
+ Near X =   6.2831853      0.33804974       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    9    1    3
+ Near X =   6.2831853      0.10497318       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    3
+ Near X =   6.2831853       0.0000000       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    4
+ Near X =   0.0000000       4.1887902       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    1    1    4
+ Near X =   0.0000000       4.0838170       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    1    1    4
+ Near X =   0.0000000       3.8507405       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    1    1    4
+ Near X =   0.0000000       3.5218484       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    1    1    4
+ Near X =   0.0000000       3.1415927       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    1    1    4
+ Near X =   0.0000000       2.7613369       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    1    1    4
+ Near X =   0.0000000       2.4324448       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    1    1    4
+ Near X =   0.0000000       2.1993683       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    4
+ Near X =   0.0000000       2.0943951       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    6
+ Near X =   6.2831853       4.1887902       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    9    1    6
+ Near X =   6.2831853       4.0838170       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    9    1    6
+ Near X =   6.2831853       3.8507405       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    9    1    6
+ Near X =   6.2831853       3.5218484       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    9    1    6
+ Near X =   6.2831853       3.1415927       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    9    1    6
+ Near X =   6.2831853       2.7613369       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    9    1    6
+ Near X =   6.2831853       2.4324448       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    9    1    6
+ Near X =   6.2831853       2.1993683       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    6
+ Near X =   6.2831853       2.0943951       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    7
+ Near X =   0.0000000       6.2831853       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    1    1    7
+ Near X =   0.0000000       6.1782121       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    1    1    7
+ Near X =   0.0000000       5.9451356       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    1    1    7
+ Near X =   0.0000000       5.6162435       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    1    1    7
+ Near X =   0.0000000       5.2359878       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    1    1    7
+ Near X =   0.0000000       4.8557320       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    1    1    7
+ Near X =   0.0000000       4.5268399       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    1    1    7
+ Near X =   0.0000000       4.2937634       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    7
+ Near X =   0.0000000       4.1887902       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    9
+ Near X =   6.2831853       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    9    1    9
+ Near X =   6.2831853       6.1782121       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    9    1    9
+ Near X =   6.2831853       5.9451356       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    9    1    9
+ Near X =   6.2831853       5.6162435       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    9    1    9
+ Near X =   6.2831853       5.2359878       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    9    1    9
+ Near X =   6.2831853       4.8557320       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    9    1    9
+ Near X =   6.2831853       4.5268399       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    9    1    9
+ Near X =   6.2831853       4.2937634       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    9
+ Near X =   6.2831853       4.1887902       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    1
+ Near Y =   0.0000000       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    2    1    1
+ Near Y =  0.10497318       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    3    1    1
+ Near Y =  0.33804974       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    4    1    1
+ Near Y =  0.66694183       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    5    1    1
+ Near Y =   1.0471976       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    6    1    1
+ Near Y =   1.4274533       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    7    1    1
+ Near Y =   1.7563454       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    8    1    1
+ Near Y =   1.9894219       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    1
+ Near Y =   2.0943951       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    2
+ Near Y =   2.0943951       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    2    1    2
+ Near Y =   2.1993683       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    3    1    2
+ Near Y =   2.4324448       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    4    1    2
+ Near Y =   2.7613369       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    5    1    2
+ Near Y =   3.1415927       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    6    1    2
+ Near Y =   3.5218484       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    7    1    2
+ Near Y =   3.8507405       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    8    1    2
+ Near Y =   4.0838170       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    2
+ Near Y =   4.1887902       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    3
+ Near Y =   4.1887902       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    2    1    3
+ Near Y =   4.2937634       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    3    1    3
+ Near Y =   4.5268399       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    4    1    3
+ Near Y =   4.8557320       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    5    1    3
+ Near Y =   5.2359878       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    6    1    3
+ Near Y =   5.6162435       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    7    1    3
+ Near Y =   5.9451356       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    8    1    3
+ Near Y =   6.1782121       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    3
+ Near Y =   6.2831853       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    7
+ Near Y =   0.0000000       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    2    1    7
+ Near Y =  0.10497318       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    3    1    7
+ Near Y =  0.33804974       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    4    1    7
+ Near Y =  0.66694183       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    5    1    7
+ Near Y =   1.0471976       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    6    1    7
+ Near Y =   1.4274533       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    7    1    7
+ Near Y =   1.7563454       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    8    1    7
+ Near Y =   1.9894219       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    7
+ Near Y =   2.0943951       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    8
+ Near Y =   2.0943951       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    2    1    8
+ Near Y =   2.1993683       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    3    1    8
+ Near Y =   2.4324448       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    4    1    8
+ Near Y =   2.7613369       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    5    1    8
+ Near Y =   3.1415927       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    6    1    8
+ Near Y =   3.5218484       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    7    1    8
+ Near Y =   3.8507405       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    8    1    8
+ Near Y =   4.0838170       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    8
+ Near Y =   4.1887902       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    9
+ Near Y =   4.1887902       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    2    1    9
+ Near Y =   4.2937634       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    3    1    9
+ Near Y =   4.5268399       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    4    1    9
+ Near Y =   4.8557320       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    5    1    9
+ Near Y =   5.2359878       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    6    1    9
+ Near Y =   5.6162435       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    7    1    9
+ Near Y =   5.9451356       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    8    1    9
+ Near Y =   6.1782121       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    9
+ Near Y =   6.2831853       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+  Mesh consistency check failed.  EXITING in VRDSMSH.
+ dofs:                    0         729           0
+ 
+ timestep restrictions :: 
+ [dxmin] =   0.16902486879450862     
+ [dt] =    5.0000000000000003E-002
+ [cfl] =   0.29581445829008346     
+ 
+ done: initialization geom/fields
+ start: cem_set_fc_ptr, volume index j=cemface(i)
+ done: cem_set_fc_ptr, ncemface=          324
+ 
+ parameters in solver ::
+ [permit_max]=   1.0000000000000000     
+ [permit_min]=   1.0000000000000000     
+ [permea_max]=   1.0000000000000000     
+ [permea_min]=   1.0000000000000000     
+ 
+ start: cem_maxwell_materials
+ done: cem_maxwell_materials
+ nid=0: gs_op_fields: single vector   9.0000000000003272E-006 sec
+ nid=0: gs_op_fields: multi  vector   4.9999999999997963E-006 sec
+ gs_op_fields: chose multi vector 
+ done: inverse mass matrix
+ ============================
+ ========  Begin Run ========
+ ============================
+ istep =         0  to      1000
+
+         0     9   8      729 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: L2
+         0     9   8      729 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: Linf
+
+         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 2.004E-01 3.750E-01 4.402E-01 0.000E+00 1.570E-04 2.15E-07 CPU: L2
+         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 2.170E+01 4.691E+01 4.700E+01 0.000E+00 1.570E-04 2.15E-07 CPU: Linf
+  
+call exitt: dying ...
+  

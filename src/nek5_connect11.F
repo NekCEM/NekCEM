@@ -1,4 +1,3 @@
-#if 0
 c-----------------------------------------------------------------------
       subroutine setup_topo
 C
@@ -35,7 +34,7 @@ C
       common /ivrtx/ vertex ((2**ldim)*lelt)
       integer*8 vertex
 
-      if(nio.eq.0) write(6,*) 'setup mesh topology'
+      if(nio.eq.0) write(6,*) 'setup_topo from nek5000 (.co2)'
 C
 C     Initialize key arrays for Direct Stiffness SUM.
 C
@@ -167,15 +166,16 @@ C========================================================================
  100  continue
 
       if(nio.eq.0) then
-        write(6,*) 'done :: setup mesh topology'
+        write(6,*) 'done :: setup mesh topology (Nek5000)'
         write(6,*) ' '
       endif
 
       return
       end
-#endif
-c-----------------------------------------------------------------------
-      subroutine setup_topo
+
+
+c--------------------------------------------------------
+      subroutine setup_topo_legacy
 c
 c     Parallel compatible routine to find
 c     connectivity of element structure.
@@ -210,7 +210,7 @@ c
       common /ivrtx/ vertex ((2**ldim)*lelt)
       integer        vertex
 
-      if (nid_io.eq.0) write(6,*) 'setup mesh topology'
+      if (nid_io.eq.0) write(6,*) 'setup_topo NekCEM legacy (.map/.ma2)'
 c
 c     Initialize key arrays for Direct Stiffness SUM.
 c
@@ -307,9 +307,12 @@ c       check if there is a least one fluid element on each processor
       call rone    (tmult,ntott)
       call dssum   (tmult,nx1,ny1,nz1)
       call invcol1 (tmult,ntott)
-
+      
+      if (nid_io.eq.0) write(6,*) 'Finish setup_topo NekCEM legacy'
+      
       return
       end
+
 
 c-----------------------------------------------------------------------
       subroutine setup_ds(gs_handle,nx,ny,nz,nel,melg,vertex,glo_num)
@@ -381,17 +384,11 @@ c
       integer*8 glo_num(1),ngv
       integer vertex(1),nx
       logical ifcenter
-      logical ifco2
-      inquire(file=co2fle,exist=ifco2)
 
       if (ldim.eq.3) then
          call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
       else
-         if (ifco2) then
-            call setvert2d_co2(glo_num,ngv,nx,nel,vertex,ifcenter)
-         else
-            call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
-         endif
+         call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
       endif
 
       if (nid_io.eq.0) write(6,*) '  call usrsetvert'
@@ -400,7 +397,6 @@ c
 
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine gbtuple_rank(tuple,m,n,nmax,cr_h,nid,np,ind)
 c
@@ -467,6 +463,81 @@ C     enddo
 
       return
       end
+
+c-----------------------------------------------------------------------
+      subroutine gbtuple_rank8(tuple,m,n,nmax,cr_h,nid,np,ind)
+c
+c     Return a unique rank for each matched tuple set. Global.  Balanced.
+c
+c     tuple is destroyed.
+c
+c     By "balanced" we mean that none of the tuple entries is likely to
+c     be much more uniquely populated than any other, so that any of
+c     the tuples can serve as an initial (parallel) sort key
+c
+c     First two slots in tuple(:,i) assumed empty
+c
+      integer*8 tuple(m,nmax)
+      integer ind(nmax),cr_h
+
+      parameter (mmax=40)
+      integer key(mmax)
+      integer*8  wtuple(mmax),np8
+
+      integer*8 nu8,nu_prior,nu_tot,i8gl_running_sum
+
+
+      np8 = np
+
+      if (m.gt.mmax) then
+         write(6,*) nid,m,mmax,' gbtuple_rank8 fail, B'
+         call exitt
+      endif
+
+      do i=1,n
+         tuple(1,i) = mod(tuple(3,i),np8) ! destination processor
+         tuple(2,i) = i                   ! return location
+      enddo
+
+      ni= n
+      ky=1  ! Assumes crystal_new already called
+      call crystal_ituple_transfer(cr_h, tuple,2*m,ni,nmax, ky)
+
+
+      nimx = iglmax(ni,1)
+      if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, B'
+      if (nimx.gt.nmax) call exitt
+
+      nkey = m-2
+      do k=1,nkey
+         key(k) = k+2
+      enddo
+
+
+      call i8rank_vecn(ind,nu,tuple,m,ni,key,nkey,wtuple)! tuple re-ordered,
+                                                         ! but contents same
+      nu8      = nu
+      nu_tot   = i8gl_running_sum(nu8) ! running sum over P processors
+      nu_prior = nu_tot - nu8
+
+      do i=1,ni
+         tuple(3,i) = ind(i) + nu_prior  ! global ranking
+      enddo
+
+c     Use 2*m since tuple = int*8
+      call crystal_ituple_transfer(cr_h, tuple,2*m,ni,nmax, ky)
+
+      nk = 1  ! restore to original order, local rank: 2; global: 3
+      ky = 2
+      call i8tuple_sort(tuple,m,n,ky,nk,ind,wtuple)
+
+
+      return
+      end
+c-----------------------------------------------------------------------
+
+
+
 
 c-----------------------------------------------------------------------
       subroutine setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
@@ -1006,7 +1077,6 @@ c     Quick check on maximum #dofs:
  
       return
       end
-
 c-----------------------------------------------------------------------
       subroutine irank_vecn(ind,nn,a,m,n,key,nkey,aa)
 c
@@ -1050,12 +1120,184 @@ c
       return
       end
 
+
+c-----------------------------------------------------------------------
+      subroutine setvert2d_co2(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     setup unique ids for dssum  
+c
+      include 'SIZE'
+      include 'CTIMER'
+      include 'PARALLEL'
+      include 'TOPOL'
+      include 'GEOM'
+
+      integer*8 glo_num(1)
+      integer*8 ngv
+      integer*8 vertex(0:1,0:1,1)
+      logical ifcenter
+
+      integer*8  edge(0:1,0:1,2,lelt),enum(4,lelt)
+      common  /scrmg/ edge,enum
+
+      parameter (nsafe=8)  ! OFTEN, nsafe=2 suffices
+      integer*8 etuple(4,4*lelt*nsafe)
+      integer   ind(4*lelt*nsafe)
+      common  /scrns/ etuple,ind
+
+      integer e,eg
+      logical ifij
+
+      integer*8 ngvv,ngve,ngvs,ngvi,ngvm,igv,ig0
+      integer*8 n_on_edge,n_on_face,n_in_interior,n_unique_edges
+      integer*8 i8glmax,kswap
+
+c     memory check...
+
+      ny   = nx
+      nz   = 1
+      nxyz = nx*ny*nz
+
+c     Count number of unique vertices
+      nlv  = 2**ldim
+      ngvv = i8glmax(vertex,nlv*nel)
+      ngv  = ngvv
+
+
+c     Assign hypercube ordering of vertices.
+      do e=1,nel
+         do j=0,1
+         do i=0,1
+c           Local to global node number (vertex)
+            il  = 1 + (nx-1)*i + nx*(nx-1)*j
+            ile = il + nx*ny*(e-1)
+            glo_num(ile)   = vertex(i,j,e)
+         enddo
+         enddo
+      enddo
+      if (nx.eq.2) return
+c
+c     Assign edge labels by bounding vertices.  
+      do e=1,nel
+         do j=0,1
+         do i=0,1
+            edge(i,j,1,e) = vertex(i,j,e)  ! r-edge
+            edge(j,i,2,e) = vertex(i,j,e)  ! s-edge
+         enddo
+         enddo
+      enddo
+
+c     Sort edges by bounding vertices.
+      do i=0,4*nel-1
+         if (edge(0,i,1,1).gt.edge(1,i,1,1)) then
+            kswap = edge(0,i,1,1)
+            edge(0,i,1,1) = edge(1,i,1,1)
+            edge(1,i,1,1) = kswap
+         endif
+         etuple(3,i+1) = edge(0,i,1,1)
+         etuple(4,i+1) = edge(1,i,1,1)
+      enddo
+
+c     Assign a number (rank) to each unique edge
+      m    = 4
+      n    = 4*nel
+      nmax = 4*lelt*nsafe  ! nsafe for crystal router factor of safety
+
+      call gbtuple_rank8(etuple,m,n,nmax,cr_h,nid,np,ind)
+
+      do i=1,4*nel
+         enum(i,1) = etuple(3,i)
+      enddo
+      n_unique_edges = iglmax(enum,4*nel)
+
+c= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+c     Assign global vertex numbers to SEM nodes on each edge
+      n_on_edge = nx-2
+      do e=1,nel
+
+         iedg_loc = 0
+
+c        Edges 1-2
+         do j=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = nx*(nx-1)*j
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e+1).lt.glo_num(i0e+nx)) then
+               do i=2,nx-1                                   ! std forward case
+                  glo_num(i0e+i) = igv + i-1
+               enddo
+            else
+               do i=2,nx-1                                   ! backward case
+                  glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+c
+c        Edges 3-4
+         do i=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = 1+(nx-1)*i
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e).lt.glo_num(i0e+nx*(nx-1))) then
+               do j=2,nx-1                                   ! std forward case
+                  glo_num(i0e+(j-1)*nx) = igv + j-1
+               enddo
+            else
+               do j=2,nx-1                                   ! backward case
+                  glo_num(i0e+(j-1)*nx) = igv + 1 + n_on_edge-(j-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+      enddo
+ 
+      ngve = n_unique_edges*n_on_edge
+      ngv  = ngv + ngve    
+c
+c     Finally,  number interiors  
+c
+      n_in_interior = (nx-2)*(ny-2)
+      ngvi          = n_in_interior*nelgt
+      if (ifcenter) then
+         do e=1,nel
+            ig0 = ngv + n_in_interior*(lglel(e)-1)
+            l = 0
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nxyz*(e-1)) = ig0+l
+            enddo
+            enddo
+         enddo
+         ngv = ngv + ngvi
+      else
+         do e=1,nel
+            l = 0
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nxyz*(e-1)) = 0
+            enddo
+            enddo
+         enddo
+      endif
+
+c     Quick check on maximum #dofs:
+      m    = nxyz*nelt
+      ngvm = i8glmax(glo_num,m)
+      ngvv = ngvv + ngve         ! number of unique ids w/o interior 
+      ngvi = ngvi + ngvv         ! total number of unique ids 
+      if (nio.eq.0) write(6,1) nx,ngvv,ngvi,ngv,ngvm
+    1 format('   setvert2d:',i4,4i12)
+
+      return
+      end
+
+
+
 c-----------------------------------------------------------------------
       subroutine get_vert
-#if !defined(PARRSB) && !defined(PARMETIS)
-#if defined(DPROCMAP)
-      call exitti('DPROCMAP requires PARRSB or PARMETIS!$',0)
-#else
       include 'SIZE'
       include 'TOTAL'
       include 'ZPER'
@@ -1076,41 +1318,20 @@ c-----------------------------------------------------------------------
       if (iftet) ncrnr = ndim + 1
       if (nid_io.eq.0) write(6,*) 'get_vert, ncrnr=',ncrnr
 
-      if (nid_io.eq.0) write(6,*) ' Call get_vert_map (with .map/.ma2)'
       call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 
       return
-#endif
-#endif
-
-#if defined(PARRSB) || defined(PARMETIS)
-      include 'SIZE'
-      include 'TOTAL'
-
-      integer icalld
-      save    icalld
-      data    icalld  /0/
-
-      if(icalld.gt.0) return
-
-      nv = 2**ldim
-      if (nid_io.eq.0) write(6,*) 'Call get_vert_map_con (with .co2)'
-      call get_vert_map_con(nv)
-
-      icalld = 1
-
-      return
-#endif
-      return
-
       end
-
-#if defined(PARRSB) || defined(PARMETIS)
 c-----------------------------------------------------------------------
-      subroutine get_vert_map_con(nlv)
+      subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
 
       include 'SIZE'
       include 'TOTAL'
+      character*132 mapfle
+      character*1   mapfle1(132)
+      equivalence  (mapfle,mapfle1)
+
+      logical ifma2,ifmap
 
       parameter(mdw=2+2**ldim)
       parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
@@ -1120,12 +1341,10 @@ c-----------------------------------------------------------------------
       integer     wk4(2*mdw*ndw)
       equivalence (wk4,wk)
 
-      common /ivrtx/ vertex ((2**ldim),lelt)
-      integer*8 vertex
-
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       integer ibuf(2)
+      integer*8 vertex((2**ldim),lelt)
 
       integer*8 eid8(lelt), vtx8(lelt*2**ldim)
       integer   iwork(lelt)
@@ -1138,22 +1357,60 @@ c-----------------------------------------------------------------------
 
       logical ifbswap, ifread_con
 
-c#if defined(PARRSB) || defined(PARMETIS)
+
+      ierr = 0
+      ifma2 = .false.
+
+      if (nid.eq.0) then
+         lfname = ltrunc(reafle,132) - 4
+         call blank (mapfle,132)
+         call chcopy(mapfle,reafle,lfname)
+         call chcopy(mapfle1(lfname+1),'.map',4)
+         inquire(file=mapfle, exist=ifmap)
+
+         if (.not.ifmap) then
+            call chcopy(mapfle1(lfname+1),'.ma2',4)
+            inquire(file=mapfle, exist=ifma2)
+         endif
+
+        if(.not.ifmap .and. .not.ifma2) ierr = 1 
+      endif
+      if(nid.eq.0) write(6,'(A,A)') ' Reading ', mapfle
+      if(nid.eq.0) write(6,*) ' ifma2'
+      if(nid.eq.0) write(6,*) ifma2
+      if(nid.eq.0) write(6,*) ' ifmap'
+      if(nid.eq.0) write(6,*) ifmap
+      call err_chk(ierr,' Cannot find map file!$')
+      call bcast(ifma2,lsize)
+      ierr = 0
+
+#if !defined(PARRSB) && !defined(PARMETIS)
+# if defined(DPROCMAP)
+      call exitti('DPROCMAP requires PARRSB or PARMETIS!$',0)
+# else
+      if(nid.eq.0) write(6,*) ' get_vert_map using .map or .ma2'
+      if (ifmap) then
+         call read_map(vertex, nlv, nel, '.map', ifgfdm)
+      elseif (ifma2) then
+         call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
+      endif
+      return
+# endif
+#else
+      if(nid.eq.0) write(6,*) ' get_vert_map using .co2'
       neli = nelt
       ifread_con = .true.
-      if(nid.eq.0) write(6,*) ' Calling read_con'
       call read_con(wk4,size(wk),neli,nlv,ierr)
 
       if (ierr.ne.0) then
         ifread_con = .false.
-        if(nid.eq.0) write(6,*) ' Calling find_cond'
         call find_con(wk,nwk,0.2,ierr)
         if(ierr.ne.0) call find_con(wk,nwk,0.01,ierr)
         call err_chk(ierr,' findConnectivity failed!$')
       endif
 
 c fluid elements
-      if(nid.eq.0) write(6,*) ' Fluid elements'
+      if(nid.eq.0) write(6,*) ' get_vert_map using .co2, fluid elements'
       j  = 0
       ii = 0
       cnt= 0
@@ -1188,25 +1445,7 @@ c fluid elements
 
       algo = 0 ! 0 - Lanczos, 1 - MG
       nel = neliv
-      if (nid.eq.0) then
-         if(nid.eq.0) write(6,*) ' lelt', lelt
-         if(nid.eq.0) write(6,*) ' nel', nel 
-         if(nid.eq.0) write(6,*) ' nlv', nlv
-         if(nid.eq.0) write(6,*) ' meshPartitioner', meshPartitioner
-         do i=1,lelt
-            if(nid.eq.0) write(6,*) ' i', i
-            if(nid.eq.0) write(6,*) ' eid8(i)', eid8(i)
-         enddo
-         do i=1,lelt*2**ldim
-            if(nid.eq.0) write(6,*) ' i', i
-            if(nid.eq.0) write(6,*) ' vtx8(i)', vtx8(i)
-         enddo
-         do i=1,ldim*lelt*2**ldim
-            if(nid.eq.0) write(6,*) ' i', i
-            if(nid.eq.0) write(6,*) ' xyz(i)', xyz(i)
-         enddo
-      endif
-      if(nid.eq.0) write(6,*) ' Call fpartMesh'
+      if(nid.eq.0) write(6,*) ' calling fpartMesh'
       call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
      $  meshPartitioner,algo,loglevel,ierr)
       call err_chk(ierr,'partMesh fluid failed!$')
@@ -1216,19 +1455,26 @@ c fluid elements
       ierr = 0 
       if (nelv .gt. lelv) ierr = 1
       call err_chk(ierr,'nelv > lelv!$')
+      if(nid.eq.0) write(6,*) ' nelv', nelv
+      if(nid.eq.0) write(6,*) ' nelt', nelt
  
-      if(nid.eq.0) write(6,*) ' Call lglel(i)=eid8(i)'
       do i = 1,nelv
+         if(nid.eq.0) write(6,*) ' lglel(i)=eid8(i)'
          lglel(i) = eid8(i)
       enddo
-      if(nid.eq.0) write(6,*) ' Call isort'
+      if(nid.eq.0) write(6,*) ' calling isort'
       call isort(lglel,iwork,nelv)
       do i = 1,nelv
+         if(nid.eq.0) write(6,*) ' calling i8copy'
+         if(nid.eq.0) write(6,*) vertex(1,i)
+         if(nid.eq.0) write(6,*) iwork(i)
+         if(nid.eq.0) write(6,*) vtx8((iwork(i)-1)*nlv+1)
          call i8copy(vertex(1,i),vtx8((iwork(i)-1)*nlv+1),nlv)
       enddo
 
       cnt=0
 c solid elements
+      if(nid.eq.0) write(6,*) ' get_vert_map using .co2, solid elements'
       if (nelgt.ne.nelgv) then
          j  = 0
          ii = 0
@@ -1263,6 +1509,7 @@ c solid elements
 
          algo = 0 ! 0 - Lanczos, 1 - MG
          nel = nelit
+         if(nid.eq.0) write(6,*) ' calling fpartMesh'
          call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
      $                  meshPartitioner,algo,loglevel,ierr)
          call err_chk(ierr,'partMesh solid failed!$')
@@ -1306,58 +1553,8 @@ c#else
       enddo
 c#endif
 
-c#endif
 
-      return
-      end
-c-----------------------------------------------------------------------
 #endif
-
-c-----------------------------------------------------------------------
-      subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
-
-      include 'SIZE'
-      include 'TOTAL'
-      character*132 mapfle
-      character*1   mapfle1(132)
-      equivalence  (mapfle,mapfle1)
-
-      logical ifma2,ifmap
-
-      ierr = 0
-      ifma2 = .false.
-
-      if (nid.eq.0) then
-         lfname = ltrunc(reafle,132) - 4
-         call blank (mapfle,132)
-         call chcopy(mapfle,reafle,lfname)
-         call chcopy(mapfle1(lfname+1),'.map',4)
-         inquire(file=mapfle, exist=ifmap)
-
-         if (.not.ifmap) then
-            call chcopy(mapfle1(lfname+1),'.ma2',4)
-            inquire(file=mapfle, exist=ifma2)
-         endif
-
-        if(.not.ifmap .and. .not.ifma2) ierr = 1 
-      endif
-      if(nid.eq.0) write(6,'(A,A)') ' Reading ', mapfle
-      if(nid.eq.0) write(6,*) ' ifma2'
-      if(nid.eq.0) write(6,*) ifma2
-      if(nid.eq.0) write(6,*) ' ifmap'
-      if(nid.eq.0) write(6,*) ifmap
-      call err_chk(ierr,' Cannot find map file!$')
-      call bcast(ifma2,lsize)
-      ierr = 0
-
-      if(nid.eq.0) write(6,*) ' get_vert_map using .map or .ma2'
-      if (ifmap) then
-         call read_map(vertex, nlv, nel, '.map', ifgfdm)
-      elseif (ifma2) then
-         call read_ma2(vertex, nlv, nel, '.ma2', ifgfdm)
-      endif
-
-      return
       end
 
 c-----------------------------------------------------------------------
@@ -1638,10 +1835,6 @@ c-----------------------------------------------------------------------
 
             read (hdr,*) version,nelgti,nelgvi,nvi
 c    1       format(a5,2i12,i2)
-            if (nid.eq.0) write(6,*) 'version:',version
-            if (nid.eq.0) write(6,*) 'nelgti:',nelgti
-            if (nid.eq.0) write(6,*) 'nelgvi:',nelgvi
-            if (nid.eq.0) write(6,*) 'nvi:',nvi
 
             call byte_read(test,1,ierr)
             if(ierr.ne.0) goto 100
@@ -1663,18 +1856,15 @@ c    1       format(a5,2i12,i2)
 
       if (ifco2 .and. ifmpiio) then
         if (nid.eq.0) call byte_close(ierr)
-        if (nid.eq.0) write(6,*) 'Call byte_open_mpi'
         call byte_open_mpi(confle,ifh,.true.,ierr)
         offs0 = sizeof(hdr) + sizeof(test)
 
-        if (nid.eq.0) write(6,*) 'Call lim_chk'
         call lim_chk(nelr*(nvi+1),nwk,'nelr ','nwk   ','read_con  ')
 
         nelBr = igl_running_sum(nelr) - nelr
         offs  = offs0 + int(nelBr,8)*(nvi+1)*ISIZE
 
         call byte_set_view(offs,ifh)
-        if (nid.eq.0) write(6,*) 'Call byte_read_mpi'
         call byte_read_mpi(wk,(nvi+1)*nelr,-1,ifh,ierr)
         call err_chk(ierr,' Error while reading con file!$')
         call byte_close_mpi(ifh,ierr)
@@ -3666,509 +3856,5 @@ c      if (pcount .ne. ids_lgl2(0)) stop
 c
       return
       end
-
-#endif
-
-
-
-
-
-
-c-----------------------------------------------------------------------
-      subroutine i8rank_vecn(ind,nn,a,m,n,key,nkey,aa)
-c
-c     Compute rank of each unique entry a(1,i) 
-c
-c     Output:   ind(i)  i=1,...,n    (global) rank of entry a(*,i)
-c               nn  = max(rank)
-c               a(j,i) is permuted
-c
-c     Input:    a(j,i) j=1,...,m;  i=1,...,n  
-c               m      :   leading dim. of v  (ldv must be .ge. m)
-c               key    :   sort key
-c               nkey   :   
-c
-c     Although not mandatory, this ranking procedure is probably
-c     most effectively employed when the keys are pre-sorted. Thus,
-c     the option is provided to sort vi() prior to the ranking.
-c
-c
-      integer*8 a(m,n),aa(m)
-      integer ind(n),key(nkey)
-      logical iftuple_i8aneb,a_ne_b
-
-      nk = min(nkey,m)
-      call i8tuple_sort(a,m,n,key,nk,ind,aa)
-
-c     Find unique a's
-      call i8copy(aa,a,m)
-      nn     = 1
-      ind(1) = nn
-c
-      do i=2,n
-         a_ne_b = iftuple_i8aneb(aa,a(1,i),key,nk)
-         if (a_ne_b) then
-            call i8copy(aa,a(1,i),m)
-            nn = nn+1
-         endif
-         ind(i) = nn ! set ind() to rank
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-
-      subroutine i8tuple_sort(a,lda,n,key,nkey,ind,aa)
-
-c     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
-
-      integer*8 a(lda,n),aa(lda)
-      integer ind(1),key(nkey)
-      logical iftuple_i8altb
-
-      do 10 j=1,n
-         ind(j)=j
-   10 continue
-
-      if (n.le.1) return
-      L=n/2+1
-      ir=n
-  100 continue
-         if (l.gt.1) then
-            l=l-1
-c           aa  = a  (l)
-            call i8copy(aa,a(1,l),lda)
-            ii  = ind(l)
-         else
-c           aa =   a(ir)
-            call i8copy(aa,a(1,ir),lda)
-            ii = ind(ir)
-c           a(ir) =   a( 1)
-            call i8copy(a(1,ir),a(1,1),lda)
-            ind(ir) = ind( 1)
-            ir=ir-1
-            if (ir.eq.1) then
-c              a(1) = aa
-               call i8copy(a(1,1),aa,lda)
-               ind(1) = ii
-               return
-            endif
-         endif
-         i=l
-         j=l+l
-  200    continue
-         if (j.le.ir) then
-            if (j.lt.ir) then
-               if (iftuple_i8altb(a(1,j),a(1,j+1),key,nkey)) j=j+1
-            endif
-            if (iftuple_i8altb(aa,a(1,j),key,nkey)) then
-c              a(i) = a(j)
-               call i8copy(a(1,i),a(1,j),lda)
-               ind(i) = ind(j)
-               i=j
-               j=j+j
-            else
-               j=ir+1
-            endif
-         goto 200
-         endif
-c        a(i) = aa
-         call i8copy(a(1,i),aa,lda)
-         ind(i) = ii
-      goto 100
-      end
-c
-c-----------------------------------------------------------------------
-
-c-----------------------------------------------------------------------
-
-      logical function iftuple_i8altb(a,b,key,nkey)
-      integer*8 a(1),b(1)
-      integer key(nkey)
-
-      do i=1,nkey
-         k=key(i)
-         if (a(k).lt.b(k)) then
-            iftuple_i8altb = .true.
-            return
-         elseif (a(k).gt.b(k)) then
-            iftuple_i8altb = .false.
-            return
-         endif
-      enddo
-      iftuple_i8altb = .false.
-      return
-      end
-c
-c-----------------------------------------------------------------------
-c-----------------------------------------------------------------------
-c
-      logical function iftuple_i8aneb(a,b,key,nkey)
-      integer*8 a(1),b(1)
-      integer key(nkey)
-
-      do i=1,nkey
-         k=key(i)
-         if (a(k).ne.b(k)) then
-            iftuple_i8aneb = .true.
-            return
-         endif
-      enddo
-      iftuple_i8aneb = .false.
-      return
-      end
-c
-
-c-----------------------------------------------------------------------
-      subroutine setvert2d_co2(glo_num,ngv,nx,nel,vertex,ifcenter)
-c
-c     setup unique ids for dssum  
-c
-      include 'SIZE'
-      include 'CTIMER'
-      include 'PARALLEL'
-      include 'TOPOL'
-      include 'GEOM'
-
-      integer*8 glo_num(1)
-      integer*8 ngv
-      integer*8 vertex(0:1,0:1,1)
-      logical ifcenter
-
-      integer*8  edge(0:1,0:1,2,lelt),enum(4,lelt)
-      common  /scrmg/ edge,enum
-
-      parameter (nsafe=8)  ! OFTEN, nsafe=2 suffices
-      integer*8 etuple(4,4*lelt*nsafe)
-      integer   ind(4*lelt*nsafe)
-      common  /scrns/ etuple,ind
-
-      integer e,eg
-      logical ifij
-
-      integer*8 ngvv,ngve,ngvs,ngvi,ngvm,igv,ig0
-      integer*8 n_on_edge,n_on_face,n_in_interior,n_unique_edges
-      integer*8 i8glmax,kswap
-
-c     memory check...
-
-      ny   = nx
-      nz   = 1
-      nxyz = nx*ny*nz
-
-c     Count number of unique vertices
-      nlv  = 2**ldim
-      ngvv = i8glmax(vertex,nlv*nel)
-      ngv  = ngvv
-
-
-c     Assign hypercube ordering of vertices.
-      do e=1,nel
-         do j=0,1
-         do i=0,1
-c           Local to global node number (vertex)
-            il  = 1 + (nx-1)*i + nx*(nx-1)*j
-            ile = il + nx*ny*(e-1)
-            glo_num(ile)   = vertex(i,j,e)
-         enddo
-         enddo
-      enddo
-      if (nx.eq.2) return
-c
-c     Assign edge labels by bounding vertices.  
-      do e=1,nel
-         do j=0,1
-         do i=0,1
-            edge(i,j,1,e) = vertex(i,j,e)  ! r-edge
-            edge(j,i,2,e) = vertex(i,j,e)  ! s-edge
-         enddo
-         enddo
-      enddo
-
-c     Sort edges by bounding vertices.
-      do i=0,4*nel-1
-         if (edge(0,i,1,1).gt.edge(1,i,1,1)) then
-            kswap = edge(0,i,1,1)
-            edge(0,i,1,1) = edge(1,i,1,1)
-            edge(1,i,1,1) = kswap
-         endif
-         etuple(3,i+1) = edge(0,i,1,1)
-         etuple(4,i+1) = edge(1,i,1,1)
-      enddo
-
-c     Assign a number (rank) to each unique edge
-      m    = 4
-      n    = 4*nel
-      nmax = 4*lelt*nsafe  ! nsafe for crystal router factor of safety
-
-      call gbtuple_rank8(etuple,m,n,nmax,cr_h,nid,np,ind)
-
-      do i=1,4*nel
-         enum(i,1) = etuple(3,i)
-      enddo
-      n_unique_edges = iglmax(enum,4*nel)
-
-c= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-c     Assign global vertex numbers to SEM nodes on each edge
-      n_on_edge = nx-2
-      do e=1,nel
-
-         iedg_loc = 0
-
-c        Edges 1-2
-         do j=0,1
-            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
-            i0  = nx*(nx-1)*j
-            i0e = i0 + nxyz*(e-1)
-            if (glo_num(i0e+1).lt.glo_num(i0e+nx)) then
-               do i=2,nx-1                                   ! std forward case
-                  glo_num(i0e+i) = igv + i-1
-               enddo
-            else
-               do i=2,nx-1                                   ! backward case
-                  glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
-               enddo
-            endif
-            iedg_loc = iedg_loc + 1
-         enddo
-c
-c        Edges 3-4
-         do i=0,1
-            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
-            i0  = 1+(nx-1)*i
-            i0e = i0 + nxyz*(e-1)
-            if (glo_num(i0e).lt.glo_num(i0e+nx*(nx-1))) then
-               do j=2,nx-1                                   ! std forward case
-                  glo_num(i0e+(j-1)*nx) = igv + j-1
-               enddo
-            else
-               do j=2,nx-1                                   ! backward case
-                  glo_num(i0e+(j-1)*nx) = igv + 1 + n_on_edge-(j-1)
-               enddo
-            endif
-            iedg_loc = iedg_loc + 1
-         enddo
-      enddo
- 
-      ngve = n_unique_edges*n_on_edge
-      ngv  = ngv + ngve    
-c
-c     Finally,  number interiors  
-c
-      n_in_interior = (nx-2)*(ny-2)
-      ngvi          = n_in_interior*nelgt
-      if (ifcenter) then
-         do e=1,nel
-            ig0 = ngv + n_in_interior*(lglel(e)-1)
-            l = 0
-            do j=2,ny-1
-            do i=2,nx-1
-               l = l+1
-               glo_num(i+nx*(j-1)+nxyz*(e-1)) = ig0+l
-            enddo
-            enddo
-         enddo
-         ngv = ngv + ngvi
-      else
-         do e=1,nel
-            l = 0
-            do j=2,ny-1
-            do i=2,nx-1
-               l = l+1
-               glo_num(i+nx*(j-1)+nxyz*(e-1)) = 0
-            enddo
-            enddo
-         enddo
-      endif
-
-c     Quick check on maximum #dofs:
-      m    = nxyz*nelt
-      ngvm = i8glmax(glo_num,m)
-      ngvv = ngvv + ngve         ! number of unique ids w/o interior 
-      ngvi = ngvi + ngvv         ! total number of unique ids 
-      if (nio.eq.0) write(6,1) nx,ngvv,ngvi,ngv,ngvm
-    1 format('   setvert2d:',i4,4i12)
-
-      return
-      end
-
-c-----------------------------------------------------------------------
-      subroutine gbtuple_rank8(tuple,m,n,nmax,cr_h,nid,np,ind)
-c
-c     Return a unique rank for each matched tuple set. Global.  Balanced.
-c
-c     tuple is destroyed.
-c
-c     By "balanced" we mean that none of the tuple entries is likely to
-c     be much more uniquely populated than any other, so that any of
-c     the tuples can serve as an initial (parallel) sort key
-c
-c     First two slots in tuple(:,i) assumed empty
-c
-      integer*8 tuple(m,nmax)
-      integer ind(nmax),cr_h
-
-      parameter (mmax=40)
-      integer key(mmax)
-      integer*8  wtuple(mmax),np8
-
-      integer*8 nu8,nu_prior,nu_tot,i8gl_running_sum
-
-
-      np8 = np
-
-      if (m.gt.mmax) then
-         write(6,*) nid,m,mmax,' gbtuple_rank8 fail, B'
-         call exitt
-      endif
-
-      do i=1,n
-         tuple(1,i) = mod(tuple(3,i),np8) ! destination processor
-         tuple(2,i) = i                   ! return location
-      enddo
-
-      ni= n
-      ky=1  ! Assumes crystal_new already called
-      call crystal_ituple_transfer(cr_h, tuple,2*m,ni,nmax, ky)
-
-
-      nimx = iglmax(ni,1)
-      if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, B'
-      if (nimx.gt.nmax) call exitt
-
-      nkey = m-2
-      do k=1,nkey
-         key(k) = k+2
-      enddo
-
-
-      call i8rank_vecn(ind,nu,tuple,m,ni,key,nkey,wtuple)! tuple re-ordered,
-                                                         ! but contents same
-      nu8      = nu
-      nu_tot   = i8gl_running_sum(nu8) ! running sum over P processors
-      nu_prior = nu_tot - nu8
-
-      do i=1,ni
-         tuple(3,i) = ind(i) + nu_prior  ! global ranking
-      enddo
-
-c     Use 2*m since tuple = int*8
-      call crystal_ituple_transfer(cr_h, tuple,2*m,ni,nmax, ky)
-
-      nk = 1  ! restore to original order, local rank: 2; global: 3
-      ky = 2
-      call i8tuple_sort(tuple,m,n,ky,nk,ind,wtuple)
-
-
-      return
-      end
-c-----------------------------------------------------------------------
-
-
-#if 0
-c-----------------------------------------------------------------------
-      subroutine gbtuple_rank(tuple,m,n,nmax,cr_h,nid,np,ind)
-c
-c     Return a unique rank for each matched tuple set. Global.  Balanced.
-c
-c     tuple is destroyed.
-c
-c     By "balanced" we mean that none of the tuple entries is likely to
-c     be much more uniquely populated than any other, so that any of
-c     the tuples can serve as an initial (parallel) sort key
-c
-c     First two slots in tuple(:,i) assumed empty
-c
-      integer ind(nmax),tuple(m,nmax),cr_h
-
-      parameter (mmax=40)
-      integer key(mmax),wtuple(mmax)
-
-      if (m.gt.mmax) then
-         write(6,*) nid,m,mmax,' gbtuple_rank fail, A'
-         call exitt
-      endif
-
-      do i=1,n
-         tuple(1,i) = mod(tuple(3,i),np) ! destination processor
-         tuple(2,i) = i                  ! return location
-      enddo
-
-      ni= n
-      ky=1  ! Assumes crystal_new already called
-      call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
-
-      nimx = iglmax(ni,1)
-      if (ni.gt.nmax)   write(6,*) ni,nmax,n,'cr_xfer problem, A'
-      if (nimx.gt.nmax) call exitt
-
-      nkey = m-2
-      do k=1,nkey
-         key(k) = k+2
-      enddo
-
-      call irank_vecn(ind,nu,tuple,m,ni,key,nkey,wtuple)! tuple re-ordered,
-                                                        ! but contents same
-
-      nu_tot   = igl_running_sum(nu) ! running sum over P processors
-      nu_prior = nu_tot - nu
-
-      do i=1,ni
-         tuple(3,i) = ind(i) + nu_prior  ! global ranking
-      enddo
-
-      call crystal_ituple_transfer(cr_h, tuple,m,ni,nmax, ky)
-
-      nk = 1  ! restore to original order, local rank: 2; global: 3
-      ky = 2
-      call ituple_sort(tuple,m,n,ky,nk,ind,wtuple)
-
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine irank_vecn(ind,nn,a,m,n,key,nkey,aa)
-c
-c     Compute rank of each unique entry a(1,i) 
-c
-c     Output:   ind(i)  i=1,...,n    (global) rank of entry a(*,i)
-c               nn  = max(rank)
-c               a(j,i) is permuted
-c
-c     Input:    a(j,i) j=1,...,m;  i=1,...,n  
-c               m      :   leading dim. of v  (ldv must be .ge. m)
-c               key    :   sort key
-c               nkey   :   
-c
-c     Although not mandatory, this ranking procedure is probably
-c     most effectively employed when the keys are pre-sorted. Thus,
-c     the option is provided to sort vi() prior to the ranking.
-c
-c
-      integer ind(n),a(m,n)
-      integer key(nkey),aa(m)
-      logical iftuple_ianeb,a_ne_b
-
-      nk = min(nkey,m)
-      call ituple_sort(a,m,n,key,nk,ind,aa)
-
-c     Find unique a's
-      call icopy(aa,a,m)
-      nn     = 1
-      ind(1) = nn
-c
-      do i=2,n
-         a_ne_b = iftuple_ianeb(aa,a(1,i),key,nk)
-         if (a_ne_b) then
-            call icopy(aa,a(1,i),m)
-            nn = nn+1
-         endif
-         ind(i) = nn ! set ind() to rank
-      enddo
-
-      return
-      end
-
-c-----------------------------------------------------------------------
 
 #endif

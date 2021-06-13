@@ -2932,3 +2932,152 @@ C      TMP(1)=DT
       END
 
 #endif
+
+
+
+c-----------------------------------------------------------------------
+      subroutine i8rank_vecn(ind,nn,a,m,n,key,nkey,aa)
+c
+c     Compute rank of each unique entry a(1,i) 
+c
+c     Output:   ind(i)  i=1,...,n    (global) rank of entry a(*,i)
+c               nn  = max(rank)
+c               a(j,i) is permuted
+c
+c     Input:    a(j,i) j=1,...,m;  i=1,...,n  
+c               m      :   leading dim. of v  (ldv must be .ge. m)
+c               key    :   sort key
+c               nkey   :   
+c
+c     Although not mandatory, this ranking procedure is probably
+c     most effectively employed when the keys are pre-sorted. Thus,
+c     the option is provided to sort vi() prior to the ranking.
+c
+c
+      integer*8 a(m,n),aa(m)
+      integer ind(n),key(nkey)
+      logical iftuple_i8aneb,a_ne_b
+
+      nk = min(nkey,m)
+      call i8tuple_sort(a,m,n,key,nk,ind,aa)
+
+c     Find unique a's
+      call i8copy(aa,a,m)
+      nn     = 1
+      ind(1) = nn
+c
+      do i=2,n
+         a_ne_b = iftuple_i8aneb(aa,a(1,i),key,nk)
+         if (a_ne_b) then
+            call i8copy(aa,a(1,i),m)
+            nn = nn+1
+         endif
+         ind(i) = nn ! set ind() to rank
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+
+      subroutine i8tuple_sort(a,lda,n,key,nkey,ind,aa)
+
+c     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
+
+      integer*8 a(lda,n),aa(lda)
+      integer ind(1),key(nkey)
+      logical iftuple_i8altb
+
+      do 10 j=1,n
+         ind(j)=j
+   10 continue
+
+      if (n.le.1) return
+      L=n/2+1
+      ir=n
+  100 continue
+         if (l.gt.1) then
+            l=l-1
+c           aa  = a  (l)
+            call i8copy(aa,a(1,l),lda)
+            ii  = ind(l)
+         else
+c           aa =   a(ir)
+            call i8copy(aa,a(1,ir),lda)
+            ii = ind(ir)
+c           a(ir) =   a( 1)
+            call i8copy(a(1,ir),a(1,1),lda)
+            ind(ir) = ind( 1)
+            ir=ir-1
+            if (ir.eq.1) then
+c              a(1) = aa
+               call i8copy(a(1,1),aa,lda)
+               ind(1) = ii
+               return
+            endif
+         endif
+         i=l
+         j=l+l
+  200    continue
+         if (j.le.ir) then
+            if (j.lt.ir) then
+               if (iftuple_i8altb(a(1,j),a(1,j+1),key,nkey)) j=j+1
+            endif
+            if (iftuple_i8altb(aa,a(1,j),key,nkey)) then
+c              a(i) = a(j)
+               call i8copy(a(1,i),a(1,j),lda)
+               ind(i) = ind(j)
+               i=j
+               j=j+j
+            else
+               j=ir+1
+            endif
+         goto 200
+         endif
+c        a(i) = aa
+         call i8copy(a(1,i),aa,lda)
+         ind(i) = ii
+      goto 100
+      end
+c
+c-----------------------------------------------------------------------
+
+c-----------------------------------------------------------------------
+
+      logical function iftuple_i8altb(a,b,key,nkey)
+      integer*8 a(1),b(1)
+      integer key(nkey)
+
+      do i=1,nkey
+         k=key(i)
+         if (a(k).lt.b(k)) then
+            iftuple_i8altb = .true.
+            return
+         elseif (a(k).gt.b(k)) then
+            iftuple_i8altb = .false.
+            return
+         endif
+      enddo
+      iftuple_i8altb = .false.
+      return
+      end
+c
+c-----------------------------------------------------------------------
+c-----------------------------------------------------------------------
+c
+      logical function iftuple_i8aneb(a,b,key,nkey)
+      integer*8 a(1),b(1)
+      integer key(nkey)
+
+      do i=1,nkey
+         k=key(i)
+         if (a(k).ne.b(k)) then
+            iftuple_i8aneb = .true.
+            return
+         endif
+      enddo
+      iftuple_i8aneb = .false.
+      return
+      end
+c
+
+
