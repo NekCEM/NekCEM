@@ -1,0 +1,537 @@
+ Reading session file ...
+ Number of sessions   :           1
+/----------------------------------------------------------\\
+|      _   __ ______ __ __  ______  ______   __  _____     |
+|     / | / // ____// //_/ / ____/ / __ _ / / _|/ __  /    |
+|    /  |/ // __/  / ,<   / /     / /__/   / / / / / /     |
+|   / /|  // /___ / /| | / /_ _  / /___   /_/ / / / /      |
+|  /_/ |_//_____//_/ |_|/_____/ /______/ /_/ /_/ /_/       |
+|                                                          |
+|----------------------------------------------------------|
+|                                                          |
+| NekCEM :  Nek5000 for Computational Electromagnetics     |
+|           Open-Source Spectral-Element DG Maxwell Solver |
+| Source :  https://svn.mcs.anl.gov/repos/NEKCEM           |
+|                                                          |
+\\----------------------------------------------------------/
+                                                              
+
+ Number of processors:           2
+ REAL    wdsize      :           8
+ INTEGER wdsize      :           4
+ Timer accuracy      : 3.00E-07
+  
+   Mesh options: 
+   ifhex =  T  (hexahedral)
+   iftet =  F  (tetrahedral)
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.par                                                                  
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.par                                                                  
+general = [(null)]
+general:stopat = [numSteps]
+general:numsteps = [1000]
+general:dt = [5e-02]
+general:timestepper = [rk54]
+general:writeinterval = [0]
+problemtype = [(null)]
+problemtype:equation = [maxwell]
+electric = [(null)]
+electric:permittivity = [1]
+magnetic = [(null)]
+magnetic:permeability = [1]
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.re2                                                                  
+ call   mapelpr, mapping elements to processors           9
+ Calling set_proc_map (Nek5000)
+ Calling read_re2_data
+ done :: read .re2 file    0.18E-03 sec
+
+ Calling get_map()
+ done :: read .re2 file    0.18E-03 sec
+
+ Call get_vert_map_con (with .co2)
+  Calling read_con
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.co2                                                                  
+  Fluid elements
+  Call fpartMesh
+running parRSB ...
+ finished in 0.002639 s
+
+  Call lglel(i)=eid8(i)
+  Call isort
+ Compute global to local map(no proc)
+ global to local map (all proc)
+ local to global map
+ done:: set_proc_map() (Nek5000)
+ RANK     0 IEG       1       2       4       5       7
+ RANK     1 IEG       1       2       4       5
+ Print gllel:
+           1
+           2
+           1
+           3
+ Rank           1           3           6           8           9           9           0           0           0           0
+           4
+           2
+           5
+           3
+           4
+ element load imbalance:            1           4           5
+ done :: mapelpr, mapping elements to processors
+ done :: read .re2 file    0.85E-04 sec
+
+ done :: read .re2 file    0.85E-04 sec
+
+ iffilter     F
+ ifpoisson    F
+ ifgmres      F
+ ifcg         F
+ ifsemg       F
+ iffdm        F
+ ific         F
+ ifsol        F
+ ifsrc        F
+ ifcentral    F
+ ifupwind     T
+ ifdealias    F
+ iftm         F
+ ifte         T
+ ifeig        F
+ ifexp        F
+ ifrk45       T
+ ifrk22       F
+ ifpec        F
+ ifrob        F
+ ifneu        F
+ ifinhom      F
+ ifpml        F
+ ifdtn        F
+ ifrestart    F
+ param(17): defined as    0.0000000000000000     
+ setup_topo NekCEM legacy (.map/.ma2)
+   Right-handed check complete for   9 elements. OK.
+   setvert2d:   9         128         569         128         135
+   call usrsetvert
+   done :: usrsetvert
+
+   setvert2d:   9         128         569         128         135
+   setup_ds time 1.0660E-03 seconds   0  9         128           9
+ setup_dgds2:: init
+   setvert2d:  11         162         891         162         171
+   call usrsetvert
+   done :: usrsetvert
+
+ set_vert time:: 3.6000E-05 seconds 
+   setvert2d:  11         162         891         162         171
+   gs_setup time:: 2.5100E-04 seconds 
+ setup_dsdg2 time:: 3.0400E-04 seconds   1  9         162           9
+ Finish setup_topo NekCEM legacy
+ ifflow/ifheat/nfield F F           0
+ ifield0/nfld           1           0
+ Vol:   8999999.9999999963        8999999.9999999963     
+ this is bm2:   3.0035086569440383E-002
+ Vol:   39.478417604357418        39.478417604357418     
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    1
+ Near X =   0.0000000       2.0943951       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    1    1    1
+ Near X =   0.0000000       1.9894219       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    1    1    1
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    3
+ Near X =   6.2831853       2.0943951       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    9    1    3
+ Near X =   6.2831853       1.9894219       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ Near X =   0.0000000       1.7563454       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    1    1    1
+ Near X =   0.0000000       1.4274533       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    1    1    1
+ Near X =   0.0000000       1.0471976       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    1    1    1
+ Near X =   0.0000000      0.66694183       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ I,J,K,IE:    3    9    1    3
+ Near X =   6.2831853       1.7563454       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    9    1    3
+ Near X =   6.2831853       1.4274533       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    9    1    3
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    1    1    1
+ Near X =   0.0000000      0.33804974       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    1    1    1
+ Near X =   0.0000000      0.10497318       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    1
+ Near X =   0.0000000       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    4
+ Near X =   0.0000000       4.1887902       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    1    1    4
+ Near X =   0.0000000       4.0838170       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    1    1    4
+ Near X =   0.0000000       3.8507405       0.0000000    , d:   6.283185 Near X =   6.2831853       1.0471976       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    9    1    3
+ Near X =   6.2831853      0.66694183       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    9    1    3
+ Near X =   6.2831853      0.33804974       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    9    1    3
+ Near X =   6.2831853      0.10497318       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+3       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    1    1    4
+ Near X =   0.0000000       3.5218484       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    1    1    4
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    3
+ Near X =   6.2831853       0.0000000       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    6
+ Near X =   6.2831853       4.1887902       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    9    1    6
+ Near X =   0.0000000       3.1415927       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    1    1    4
+ Near X =   0.0000000       2.7613369       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    1    1    4
+ Near X =   0.0000000       2.4324448       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    1    1    4
+ Near X =   0.0000000       2.1993683       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ Near X =   6.2831853       4.0838170       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    9    1    6
+ Near X =   6.2831853       3.8507405       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    9    1    6
+ Near X =   6.2831853       3.5218484       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    9    1    6
+ Near X =   6.2831853       3.1415927       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    9    1    6
+ Near X =   6.2831853       2.7613369       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    9    1    6
+ Near X =   6.2831853       2.4324448       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    9    1    6
+ Near X =   6.2831853       2.1993683       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    4
+ Near X =   0.0000000       2.0943951       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    7
+ Near X =   0.0000000       6.2831853       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    1    1    7
+ Near X =   0.0000000       6.1782121       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    1    1    7
+ Near X =   0.0000000       5.9451356       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    6
+ Near X =   6.2831853       2.0943951       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    9
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    1    1    7
+ Near X =   0.0000000       5.6162435       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ Near X =   6.2831853       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    2    9    1    9
+ Near X =   6.2831853       6.1782121       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    1    1    7
+ Near X =   0.0000000       5.2359878       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    1    1    7
+ Near X =   0.0000000       4.8557320       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    1    1    7
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    3    9    1    9
+ Near X =   6.2831853       5.9451356       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    4    9    1    9
+ Near X =   6.2831853       5.6162435       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    5    9    1    9
+ Near X =   0.0000000       4.5268399       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    1    1    7
+ Near X =   0.0000000       4.2937634       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    7
+ Near X =   0.0000000       4.1887902       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ Near X =   6.2831853       5.2359878       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    6    9    1    9
+ Near X =   6.2831853       4.8557320       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    7    9    1    9
+ Near X =   6.2831853       4.5268399       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    8    9    1    9
+ Near X =   6.2831853       4.2937634       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    9
+ Near X =   6.2831853       4.1887902       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    1
+ Near Y =   0.0000000       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    2    1    1
+ Near Y =  0.10497318       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    3
+ Near Y =   4.1887902       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    2    1    3
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    3    1    1
+ Near Y =  0.33804974       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    4    1    1
+ Near Y =   4.2937634       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    3    1    3
+ Near Y =   4.5268399       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    4    1    3
+ Near Y =   4.8557320       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ Near Y =  0.66694183       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    5    1    1
+ Near Y =   1.0471976       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    6    1    1
+ Near Y =   1.4274533       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    7    1    1
+ Near Y =   1.7563454       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    8    1    1
+ Near Y =   1.9894219       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    1
+ Near Y =   2.0943951       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismat I,J,K,IE:    9    5    1    3
+ Near Y =   5.2359878       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    6    1    3
+ Near Y =   5.6162435       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    7    1    3
+ Near Y =   5.9451356       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    8    1    3
+ Near Y =   6.1782121       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    3
+ Near Y =   6.2831853       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    8
+ Near Y =   2.0943951       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494   ch at:
+ 
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    1    1    2
+ Near Y =   2.0943951       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ I,J,K,IE:    1    2    1    8
+ Near Y =   2.1993683       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    2    1    2
+ Near Y =   2.1993683       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    3    1    2
+ Near Y =   2.4324448       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    3    1    8
+ Near Y =   2.4324448       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    4    1    8
+ Near Y =   2.7613369       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    4    1    2
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    5    1    8
+ Near Y =   3.1415927       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ Near Y =   2.7613369       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    5    1    2
+ Near Y =   3.1415927       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    6    1    2
+ Near Y =   3.5218484       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    6    1    8
+ Near Y =   3.5218484       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    7    1    8
+ Near Y =   3.8507405       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    7    1    2
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    8    1    8
+ Near Y =   4.0838170       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    8
+ Near Y =   4.1887902       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    9
+ Near Y =   4.1887902       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ Near Y =   3.8507405       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    8    1    2
+ Near Y =   4.0838170       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    9    9    1    2
+ Near Y =   4.1887902       0.0000000       0.0000000    , d:   6.2831853       0.0000000      0.47746483    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    1    1    7
+ Near Y =   0.0000000       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    2    1    7
+ Near Y =  0.10497318       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    3    1    7
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    2    1    9
+ Near Y =   4.2937634       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    3    1    9
+ Near Y =   4.5268399       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    4    1    9
+ Near Y =  0.33804974       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    4    1    7
+ Near Y =   4.8557320       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    5    1    9
+ Near Y =   5.2359878       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    6    1    9
+ Near Y =   5.6162435       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    7    1    9
+ Near Y =  0.66694183       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    5    1    7
+ Near Y =   1.0471976       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    6    1    7
+ Near Y =   5.9451356       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    8    1    9
+ Near Y =   6.1782121       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ Near Y =   1.4274533       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    7    1    7
+ Near Y =   1.7563454       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    8    1    7
+ Near Y =   1.9894219       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    9
+ Near Y =   6.2831853       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+  Mesh consistency check failed.  EXITING in VRDSMSH.
+ WARNING: Element mesh mismatch at:
+ I,J,K,IE:    1    9    1    7
+ Near Y =   2.0943951       6.2831853       0.0000000    , d:   0.0000000      -6.2831853      0.15915494    
+  Mesh consistency check failed.  EXITING in VRDSMSH.
+ dofs:                    0         729           9
+ 
+ timestep restrictions :: 
+ [dxmin] =   0.16902486879450862     
+ [dt] =    5.0000000000000003E-002
+ [cfl] =   0.29581445829008346     
+ 
+ done: initialization geom/fields
+ start: cem_set_fc_ptr, volume index j=cemface(i)
+ done: cem_set_fc_ptr, ncemface=          180
+ 
+ parameters in solver ::
+ [permit_max]=   1.0000000000000000     
+ [permit_min]=   1.0000000000000000     
+ [permea_max]=   1.0000000000000000     
+ [permea_min]=   1.0000000000000000     
+ 
+ start: cem_maxwell_materials
+ done: cem_maxwell_materials
+ nid=0: gs_op_fields: single vector   9.9999999999961231E-006 sec
+ nid=0: gs_op_fields: multi  vector   1.0000000000003062E-005 sec
+ gs_op_fields: chose multi vector 
+ done: inverse mass matrix
+ ============================
+ ========  Begin Run ========
+ ============================
+ istep =         0  to      1000
+
+         0     5   8      405 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: L2
+         0     5   8      405 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: Linf
+
+         1     5   8      405 5.000E-02 5.000E-02 0.000E+00 0.000E+00 1.313E-09 5.977E-09 5.977E-09 0.000E+00 1.110E-04 2.84E-07 CPU: L2
+         1     5   8      405 5.000E-02 5.000E-02 0.000E+00 0.000E+00 1.472E-08 2.265E-08 2.265E-08 0.000E+00 1.110E-04 2.84E-07 CPU: Linf
+
+         2     5   8      405 1.000E-01 5.000E-02 0.000E+00 0.000E+00 4.050E-09 1.103E-08 1.103E-08 0.000E+00 2.010E-04 3.07E-07 CPU: L2
+         2     5   8      405 1.000E-01 5.000E-02 0.000E+00 0.000E+00 5.105E-08 3.582E-08 3.582E-08 0.000E+00 2.010E-04 3.07E-07 CPU: Linf
+
+         3     5   8      405 1.500E-01 5.000E-02 0.000E+00 0.000E+00 7.576E-09 1.502E-08 1.502E-08 0.000E+00 2.850E-04 3.00E-07 CPU: L2
+         3     5   8      405 1.500E-01 5.000E-02 0.000E+00 0.000E+00 9.174E-08 4.955E-08 4.955E-08 0.000E+00 2.850E-04 3.00E-07 CPU: Linf
+
+         4     5   8      405 2.000E-01 5.000E-02 0.000E+00 0.000E+00 1.120E-08 1.795E-08 1.795E-08 0.000E+00 3.690E-04 2.95E-07 CPU: L2
+         4     5   8      405 2.000E-01 5.000E-02 0.000E+00 0.000E+00 1.232E-07 6.433E-08 6.433E-08 0.000E+00 3.690E-04 2.95E-07 CPU: Linf
+
+         5     5   8      405 2.500E-01 5.000E-02 0.000E+00 0.000E+00 1.448E-08 1.998E-08 1.998E-08 0.000E+00 4.540E-04 2.93E-07 CPU: L2
+         5     5   8      405 2.500E-01 5.000E-02 0.000E+00 0.000E+00 1.396E-07 7.827E-08 7.827E-08 0.000E+00 4.540E-04 2.93E-07 CPU: Linf
+
+         6     5   8      405 3.000E-01 5.000E-02 0.000E+00 0.000E+00 1.734E-08 2.133E-08 2.133E-08 0.000E+00 5.380E-04 2.90E-07 CPU: L2
+         6     5   8      405 3.000E-01 5.000E-02 0.000E+00 0.000E+00 1.419E-07 8.969E-08 8.969E-08 0.000E+00 5.380E-04 2.90E-07 CPU: Linf
+
+         7     5   8      405 3.500E-01 5.000E-02 0.000E+00 0.000E+00 1.991E-08 2.219E-08 2.219E-08 0.000E+00 6.220E-04 2.89E-07 CPU: L2
+         7     5   8      405 3.500E-01 5.000E-02 0.000E+00 0.000E+00 1.341E-07 9.772E-08 9.772E-08 0.000E+00 6.220E-04 2.89E-07 CPU: Linf
+
+         8     5   8      405 4.000E-01 5.000E-02 0.000E+00 0.000E+00 2.229E-08 2.269E-08 2.269E-08 0.000E+00 7.070E-04 2.88E-07 CPU: L2
+         8     5   8      405 4.000E-01 5.000E-02 0.000E+00 0.000E+00 1.211E-07 1.089E-07 1.089E-07 0.000E+00 7.070E-04 2.88E-07 CPU: Linf
+
+         9     5   8      405 4.500E-01 5.000E-02 0.000E+00 0.000E+00 2.459E-08 2.292E-08 2.292E-08 0.000E+00 7.900E-04 2.87E-07 CPU: L2
+         9     5   8      405 4.500E-01 5.000E-02 0.000E+00 0.000E+00 1.074E-07 1.214E-07 1.214E-07 0.000E+00 7.900E-04 2.87E-07 CPU: Linf
+
+        10     5   8      405 5.000E-01 5.000E-02 0.000E+00 0.000E+00 2.686E-08 2.296E-08 2.296E-08 0.000E+00 8.740E-04 2.86E-07 CPU: L2
+        10     5   8      405 5.000E-01 5.000E-02 0.000E+00 0.000E+00 9.536E-08 1.295E-07 1.295E-07 0.000E+00 8.740E-04 2.86E-07 CPU: Linf
+ setup: time2/time1/time2-time1:: 4.7157E-02 5.9500E-04 4.6562E-02 sec 
+ solve: time2/time1/time2-time1:: 1.2235E-01 4.7157E-02 7.5190E-02 sec 
+ total: time2/time1/time2-time1:: 1.2235E-01 5.9500E-04 1.2176E-01 sec 
+ ===============================================================
+    total computation         :: 7.2020E-02 sec 
+    total communication       :: 1.8398E-02 sec 
+    total io time             :: 0.0000E+00 sec 
+    total userchk time        :: 0.0000E+00 sec 
+    total computation   /step :: 7.2020E-05 sec 
+    total communication /step :: 1.8398E-05 sec 
+    total io time       /step :: 0.0000E+00 sec 
+    computation time/step/pts :: 2.0002E-07 sec 
+    io          time/step/pts :: 0.0000E+00 sec 
+    io          swaptime      :: 0.0000E+00 sec 
+    io/comp     time/step/pts):: 0.0000E+00 %   
+    communication/computation :: 2.5546E+01 %   
+ ===============================================================
+  
+call exitt: dying ...
+  
