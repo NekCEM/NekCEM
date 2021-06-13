@@ -75,18 +75,7 @@ c     real*8 dclock
       call setvar               ! read parameters from rea file
       call set_logics           ! read parameters from rea file
 
-#if !defined(PARRSB) && !defined(PARMETIS)
-      call setup_topo_legacy
-#else
-      inquire(file=co2fle, exist=ifco2)
-      if (.not.ifco2) then
-         call setup_topo_legacy
-      else
-c TODO: call setup_topo from Nek5000 only if .co2 exists and PARRSB
-c       or PARMETIS defined
-         call setup_topo
-      endif
-#endif
+      call setup_topo
 
       call usrdat               ! modify element vertices
       call setlog

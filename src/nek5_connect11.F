@@ -1,181 +1,5 @@
-c-----------------------------------------------------------------------
-      subroutine setup_topo
-C
-C     Parallel compatible routine to find 
-C     connectivity of element structure.
-C
-C     On Processor 0:
-C
-C     .Verify right-handedness of elements.
-C     .Verify element-to-element reciprocity of BC's
-C     .Verify correlation between E-E BC's and physical coincidence
-C     .Set rotations
-C     .Determine multiplicity
-C     .Set up direct stiffness summation arrays.
-C
-C     All Processors:
-C
-C     .Disperse/Receive BC and MULT temporary data read from preprocessor.
-C
-C
-      include 'SIZE'
-      include 'TOTAL'
-      include 'NONCON'
-      include 'SCRCT'
-c
-      common /nekmpi/ nidd,npp,nekcomm,nekgroup,nekreal
-c      
-      COMMON /SCRUZ/ XM3 (LX3,LY3,LZ3,LELT)
-     $ ,             YM3 (LX3,LY3,LZ3,LELT)
-     $ ,             ZM3 (LX3,LY3,LZ3,LELT)
-C
-      common /c_is1/ glo_num(1*lx1*ly1*lz1*lelv)
-      integer*8 glo_num
-      common /ivrtx/ vertex ((2**ldim)*lelt)
-      integer*8 vertex
-
-      if(nio.eq.0) write(6,*) 'setup_topo from nek5000 (.co2)'
-C
-C     Initialize key arrays for Direct Stiffness SUM.
-C
-      NXL=3
-      NYL=3
-      NZL=1+2*(ldim-2)
-
-      call initds
-      call dsset (nxl,nyl,nzl)
-      call setedge
-C
-C=================================================
-C     Establish (global) domain topology
-C=================================================
-C
-C     .Generate topologically correct mesh data.
-C     .Set up element centers, face centers, etc. 
-C     .Check  right handedness of elements.
-C     .Check  element boundary conditions.
-C     .Establish Element-Element rotations
-C     .Construct the element to processor map and
-
-      call genxyzl
-      call setside
-      call verify
-
-c      CALL SETCDOF 
-c      CALL CHKAXCB
-C
-C========================================================================
-C     Set up element-processor mapping and establish global numbering
-C========================================================================
-C
-      mfield=2
-      if (ifflow) mfield=1
-      if (ifmvbd) mfield=0
-
-      ncrnr = 2**ldim
-
-      if (nelgv.eq.nelgt) then
-         call get_vert
-         call setupds(gsh_fld(1),lx1,ly1,lz1,nelv,nelgv,vertex,glo_num)
-         gsh_fld(2)=gsh_fld(1)
-
-         if(nid.eq.0) write(6,*) ''
-         call printPartStat(glo_num,nelt,lx1*ly1*lz1,nekcomm)
-         if(nid.eq.0) write(6,*) ''
-
-c        call gs_counter(glo_num,gsh_fld(1))
-
-      else
-
-c
-c        For conjugate heat transfer, it is assumed that fluid
-c        elements are listed both globally and locally with lower
-c        element numbers than the solid elements.
-c
-c        We currently assume that there is at least one fluid elem.
-c        per processor.
-c
-
-         call get_vert
-c        call outmati(vertex,4,nelv,'vrtx V')
-         call setupds(gsh_fld(1),lx1,ly1,lz1,nelv,nelgv,vertex,glo_num)
-
-c        call get_vert  (vertex, ncrnr, nelgt, '.mp2')  !  LATER !
-c        call outmati(vertex,4,nelt,'vrtx T')
-         call setupds(gsh_fld(2),lx1,ly1,lz1,nelt,nelgt,vertex,glo_num)
-
-c
-c        Feb 20, 2012:  It appears that we do not need this restriction: (pff)
-c
-c        check if there is a least one fluid element on each processor
-c        do iel = 1,nelt
-c           ieg = lglel(iel)
-c           if (ieg.le.nelgv) goto 101 
-c        enddo
-c        if(nio.eq.0) write(6,*) 
-c    &     'ERROR: each domain must contain at least one fluid element!'
-c        call exitt
-c 101   continue
-
-      endif
-
-
-c     if (ifmvbd) call setup_mesh_dssum ! Set up dssum for mesh
-
-C========================================================================
-C     Set up multiplicity and direct stiffness arrays for each IFIELD
-C========================================================================
-
-      ntotv = lx1*ly1*lz1*nelv
-      ntott = lx1*ly1*lz1*nelt
-
-      if (ifflow) then
-         ifield = 1
-         call rone    (vmult,ntotv)
-         call dssum   (vmult,lx1,ly1,lz1)
-         vmltmax=glmax(vmult,ntotv)
-         ivmltmax=vmltmax
-         if (nio.eq.0) write(6,*) 'max multiplicity ', ivmltmax
-         call invcol1 (vmult,ntotv)
-      endif
-      if (ifheat) then
-         ifield = 2
-         call rone    (tmult,ntott)
-         call dssum   (tmult,lx1,ly1,lz1)
-         call invcol1 (tmult,ntott)
-      endif
-      if (.not.ifflow) call copy(vmult,tmult,ntott)
-      if (ifmvbd)  call copy (wmult,vmult,ntott)
-      do ifield=3,nfield                  ! Additional pass. scalrs.
-         if (nelg(ifield).eq.nelgv) then
-            gsh_fld(ifield) = gsh_fld(1)
-            call copy (tmult(1,1,1,1,ifield-1),vmult,ntotv)
-         else
-            gsh_fld(ifield) = gsh_fld(2)
-            call copy (tmult(1,1,1,1,ifield-1),tmult,ntott)
-         endif
-      enddo
-
-      ifgsh_fld_same = .true.
-      do ifield=2,nfield
-         if (gsh_fld(ifield).ne.gsh_fld(1)) then
-            ifgsh_fld_same = .false.
-            goto 100
-         endif
-      enddo
- 100  continue
-
-      if(nio.eq.0) then
-        write(6,*) 'done :: setup mesh topology (Nek5000)'
-        write(6,*) ' '
-      endif
-
-      return
-      end
-
-
 c--------------------------------------------------------
-      subroutine setup_topo_legacy
+      subroutine setup_topo
 c
 c     Parallel compatible routine to find
 c     connectivity of element structure.
@@ -388,7 +212,11 @@ c
       if (ldim.eq.3) then
          call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
       else
+#if !defined(PARRSB) && !defined(PARMETIS)
+         call setvert2d_legacy(glo_num,ngv,nx,nel,vertex,ifcenter)
+#else
          call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
+#endif
       endif
 
       if (nid_io.eq.0) write(6,*) '  call usrsetvert'
@@ -900,7 +728,7 @@ c     Quick check on maximum #dofs:
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      subroutine setvert2d_legacy(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     setup unique ids for dssum
 c
@@ -1122,7 +950,7 @@ c
 
 
 c-----------------------------------------------------------------------
-      subroutine setvert2d_co2(glo_num,ngv,nx,nel,vertex,ifcenter)
+      subroutine setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     setup unique ids for dssum  
 c
@@ -1298,6 +1126,7 @@ c     Quick check on maximum #dofs:
 
 c-----------------------------------------------------------------------
       subroutine get_vert
+#if !defined(PARRSB) && !defined(PARMETIS)
       include 'SIZE'
       include 'TOTAL'
       include 'ZPER'
@@ -1321,7 +1150,238 @@ c-----------------------------------------------------------------------
       call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 
       return
+#else
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer icalld
+      save    icalld
+      data    icalld  /0/
+
+      if(icalld.gt.0) return
+
+      nv = 2**ldim
+      if (nid_io.eq.0) write(6,*) 'Call get_vert_map_con (with .co2)'
+      call get_vert_map_con(nv)
+
+      icalld = 1
+
+      return
+#endif
       end
+
+
+
+#if defined(PARRSB) || defined(PARMETIS)
+c-----------------------------------------------------------------------
+      subroutine get_vert_map_con(nlv)
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      parameter(mdw=2+2**ldim)
+      parameter(ndw=7*lx1*ly1*lz1*lelv/mdw)
+      common /scrns/ wk(mdw*ndw)
+      integer*8 wk
+
+      integer     wk4(2*mdw*ndw)
+      equivalence (wk4,wk)
+
+      common /ivrtx/ vertex ((2**ldim),lelt)
+      integer*8 vertex
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer ibuf(2)
+
+      integer*8 eid8(lelt), vtx8(lelt*2**ldim)
+      integer   iwork(lelt)
+      common /ctmp0/ eid8, vtx8, iwork
+
+      common /scrcg/ xyz(ldim*lelt*2**ldim)
+
+      integer cnt, algo
+      integer opt_parrsb(3), opt_parmetis(10)
+
+      logical ifbswap, ifread_con
+
+c#if defined(PARRSB) || defined(PARMETIS)
+      neli = nelt
+      ifread_con = .true.
+      if(nid.eq.0) write(6,*) ' Calling read_con'
+      call read_con(wk4,size(wk),neli,nlv,ierr)
+
+      if (ierr.ne.0) then
+        ifread_con = .false.
+        if(nid.eq.0) write(6,*) ' Calling find_cond'
+        call find_con(wk,nwk,0.2,ierr)
+        if(ierr.ne.0) call find_con(wk,nwk,0.01,ierr)
+        call err_chk(ierr,' findConnectivity failed!$')
+      endif
+
+c fluid elements
+      if(nid.eq.0) write(6,*) ' Fluid elements'
+      j  = 0
+      ii = 0
+      cnt= 0
+      do i = 1,neli
+         itmp = wk(ii+1)
+         if (ifread_con) itmp = wk4(ii+1)
+
+         if (itmp .le. nelgv) then
+            j = j + 1
+
+            eid8(j) = wk(ii+1)
+            call i8copy(vtx8((j-1)*nlv+1),wk(ii+2),nlv)
+            if (ifread_con) then
+              eid8(j) = wk4(ii+1)
+              call icopy48(vtx8((j-1)*nlv+1),wk4(ii+2),nlv)
+            endif
+
+            do iv=1,nlv
+              xyz(cnt+1)=xc(iv,i)
+              xyz(cnt+2)=yc(iv,i)
+              if(ldim.eq.3) then
+                xyz(cnt+3)=zc(iv,i)
+                cnt=cnt+3
+              else
+                cnt=cnt+2
+              endif
+            enddo
+         endif
+         ii = ii + (nlv+1)
+      enddo
+      neliv = j
+
+      algo = 0 ! 0 - Lanczos, 1 - MG
+      nel = neliv
+      if (nid.eq.0) then
+         if(nid.eq.0) write(6,*) ' lelt', lelt
+         if(nid.eq.0) write(6,*) ' nel', nel 
+         if(nid.eq.0) write(6,*) ' nlv', nlv
+         if(nid.eq.0) write(6,*) ' meshPartitioner', meshPartitioner
+         do i=1,lelt
+            if(nid.eq.0) write(6,*) ' i', i
+            if(nid.eq.0) write(6,*) ' eid8(i)', eid8(i)
+         enddo
+         do i=1,lelt*2**ldim
+            if(nid.eq.0) write(6,*) ' i', i
+            if(nid.eq.0) write(6,*) ' vtx8(i)', vtx8(i)
+         enddo
+         do i=1,ldim*lelt*2**ldim
+            if(nid.eq.0) write(6,*) ' i', i
+            if(nid.eq.0) write(6,*) ' xyz(i)', xyz(i)
+         enddo
+      endif
+      if(nid.eq.0) write(6,*) ' Call fpartMesh'
+      call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
+     $  meshPartitioner,algo,loglevel,ierr)
+      call err_chk(ierr,'partMesh fluid failed!$')
+
+      nelv = nel
+      nelt = nelv
+      ierr = 0 
+      if (nelv .gt. lelv) ierr = 1
+      call err_chk(ierr,'nelv > lelv!$')
+ 
+      if(nid.eq.0) write(6,*) ' Call lglel(i)=eid8(i)'
+      do i = 1,nelv
+         lglel(i) = eid8(i)
+      enddo
+      if(nid.eq.0) write(6,*) ' Call isort'
+      call isort(lglel,iwork,nelv)
+      do i = 1,nelv
+         call i8copy(vertex(1,i),vtx8((iwork(i)-1)*nlv+1),nlv)
+      enddo
+
+      cnt=0
+c solid elements
+      if (nelgt.ne.nelgv) then
+         j  = 0
+         ii = 0
+         do i = 1,neli
+            itmp = wk(ii+1)
+            if (ifread_con) itmp = wk4(ii+1)
+
+            if (itmp .gt. nelgv) then
+               j = j + 1
+
+               eid8(j) = wk(ii+1)
+               call i8copy(vtx8((j-1)*nlv+1),wk(ii+2),nlv)
+               if (ifread_con) then
+                 eid8(j) = wk4(ii+1)
+                 call icopy48(vtx8((j-1)*nlv+1),wk4(ii+2),nlv)
+               endif
+
+               do iv=1,nlv
+                 xyz(cnt+1)=xc(iv,i)
+                 xyz(cnt+2)=yc(iv,i)
+                 if(ldim.eq.3) then
+                   xyz(cnt+3)=zc(iv,i)
+                   cnt=cnt+3
+                 else
+                   cnt=cnt+2
+                 endif
+               enddo
+            endif
+            ii = ii + (nlv+1)
+         enddo
+         nelit = j
+
+         algo = 0 ! 0 - Lanczos, 1 - MG
+         nel = nelit
+         call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
+     $                  meshPartitioner,algo,loglevel,ierr)
+         call err_chk(ierr,'partMesh solid failed!$')
+
+         nelt = nelv + nel
+         ierr = 0 
+         if (nelt .gt. lelt) ierr = 1
+         call err_chk(ierr,'nelt > lelt!$')
+    
+         do i = 1,nel
+            lglel(nelv+i) = eid8(i)
+         enddo
+         call isort(lglel(nelv+1),iwork,nel) ! sort locally by global element id
+         do i = 1,nel
+            call i8copy(vertex(1,nelv+i),vtx8((iwork(i)-1)*nlv+1),nlv)
+         enddo
+      endif
+
+c#ifdef DPROCMAP
+c      do i = 1,nelt
+c         ieg = lglel(i)
+c         if (ieg.lt.1 .or. ieg.gt.nelgt) 
+c     $      call exitti('invalid ieg!$',ieg)
+c         ibuf(1) = i
+c         ibuf(2) = nid
+c         call dProcmapPut(ibuf,2,0,ieg)
+c      enddo
+c#else
+      call izero(gllnid,nelgt)
+      do i = 1,nelt
+         ieg = lglel(i)
+         gllnid(ieg) = nid
+      enddo
+      npass = 1 + nelgt/lelt
+      k=1
+      do ipass = 1,npass
+         m = nelgt - k + 1
+         m = min(m,lelt)
+         if (m.gt.0) call igop(gllnid(k),iwork,'+  ',m)
+         k = k+m
+      enddo
+c#endif
+
+c#endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+#endif
+
+
+
 c-----------------------------------------------------------------------
       subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
 

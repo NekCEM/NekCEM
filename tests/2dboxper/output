@@ -31,7 +31,7 @@ magnetic:permeability = [1]
  Number of processors:           1
  REAL    wdsize      :           8
  INTEGER wdsize      :           4
- Timer accuracy      : 2.00E-07
+ Timer accuracy      : 3.00E-07
   
    Mesh options: 
    ifhex =  T  (hexahedral)
@@ -41,21 +41,17 @@ magnetic:permeability = [1]
  call   mapelpr, mapping elements to processors           9
  Calling set_proc_map (Nek5000)
  Calling read_re2_data
- done :: read .re2 file    0.27E-04 sec
+ done :: read .re2 file    0.41E-04 sec
 
  Calling get_map()
  get_vert, ncrnr=           4
   Call get_vert_map (with .map/.ma2)
- Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.ma2                                                                  
+ Reading /Users/yiminllin/Desktop/github/NekCEM/tests/2dboxper/2dboxper.map                                                                  
   ifma2
- T
-  ifmap
  F
+  ifmap
+ T
   get_vert_map using .map or .ma2
-  version,neli,nnzi:#v001           9           9
-  Finish reading ma2 header
-  Start loop
-  Start reading ma2
  m     1
            1           7           9           8           7           6
            7           9           8           7           6
@@ -103,7 +99,7 @@ magnetic:permeability = [1]
            9
  element load imbalance:            0           9           9
  done :: mapelpr, mapping elements to processors
- done :: read .re2 file    0.39E-04 sec
+ done :: read .re2 file    0.30E-04 sec
 
  iffilter     F
  ifpoisson    F
@@ -137,15 +133,15 @@ magnetic:permeability = [1]
    call usrsetvert
    done :: usrsetvert
 
-   setup_ds time 2.0900E-04 seconds   0  9 38654705765           9
+   setup_ds time 2.8300E-04 seconds   0  9 38654705765           9
  setup_dgds2:: init
    setvert2d:  11 38654705793 38654706522 38654705793 38654705793
    call usrsetvert
    done :: usrsetvert
 
- set_vert time:: 2.0000E-05 seconds 
-   gs_setup time:: 7.2000E-05 seconds 
- setup_dsdg2 time:: 1.0000E-04 seconds   1  9 38654705793           9
+ set_vert time:: 4.1000E-05 seconds 
+   gs_setup time:: 9.0000E-05 seconds 
+ setup_dsdg2 time:: 1.4000E-04 seconds   1  9 38654705793           9
  ifflow/ifheat/nfield F F           0
  ifield0/nfld           1           0
  Vol:   8999999.9999999907        8999999.9999999907     
@@ -1479,8 +1475,8 @@ magnetic:permeability = [1]
  
  start: cem_maxwell_materials
  done: cem_maxwell_materials
- nid=0: gs_op_fields: single vector   2.0000000000002655E-006 sec
- nid=0: gs_op_fields: multi  vector   2.9999999999995308E-006 sec
+ nid=0: gs_op_fields: single vector   4.0000000000005309E-006 sec
+ nid=0: gs_op_fields: multi  vector   3.0999999999999778E-005 sec
  gs_op_fields: chose single vector
  done: inverse mass matrix
  ============================
@@ -1491,8 +1487,8 @@ magnetic:permeability = [1]
          0     9   8      729 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: L2
          0     9   8      729 0.000E+00 5.000E-02 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.000E+00 0.00E+00 CPU: Linf
 
-         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 8.294E-01 1.965E-01 4.554E-01 0.000E+00 1.250E-04 1.71E-07 CPU: L2
-         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 4.557E+01 1.137E+01 3.116E+01 0.000E+00 1.250E-04 1.71E-07 CPU: Linf
+         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 8.294E-01 1.965E-01 4.554E-01 0.000E+00 1.420E-04 1.95E-07 CPU: L2
+         1     9   8      729 5.000E-02 5.000E-02 0.000E+00 0.000E+00 4.557E+01 1.137E+01 3.116E+01 0.000E+00 1.420E-04 1.95E-07 CPU: Linf
   
 call exitt: dying ...
   
