@@ -3080,4 +3080,58 @@ c
       end
 c
 
+c-----------------------------------------------------------------------
+      subroutine i8sort(a,ind,n)
+
+C     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
+
+      integer*8 a(1),aa
+      integer ind(1)
+
+      do 10 j=1,n
+         ind(j)=j
+   10 continue
+
+      if (n.le.1) return
+      l=n/2+1
+      ir=n
+  100 continue
+         if (l.gt.1) then
+            l=l-1
+            aa  = a  (l)
+            ii  = ind(l)
+         else
+                 aa =   a(ir)
+                 ii = ind(ir)
+              a(ir) =   a( 1)
+            ind(ir) = ind( 1)
+            ir=ir-1
+            if (ir.eq.1) then
+                 a(1) = aa
+               ind(1) = ii
+               return
+            endif
+         endif
+         i=l
+         j=l+l
+  200    continue
+         if (j.le.ir) then
+            if (j.lt.ir) then
+               if ( a(j).lt.a(j+1) ) j=j+1
+            endif
+            if (aa.lt.a(j)) then
+                 a(i) = a(j)
+               ind(i) = ind(j)
+               i=j
+               j=j+j
+            else
+               j=ir+1
+            endif
+         goto 200
+         endif
+           a(i) = aa
+         ind(i) = ii
+      goto 100
+      end
+c-----------------------------------------------------------------------
 

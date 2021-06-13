@@ -210,7 +210,11 @@ c
       logical ifcenter
 
       if (ldim.eq.3) then
+#if !defined(PARRSB) && !defined(PARMETIS)
+         call setvert3d_legacy(glo_num,ngv,nx,nel,vertex,ifcenter)
+#else
          call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+#endif
       else
 #if !defined(PARRSB) && !defined(PARMETIS)
          call setvert2d_legacy(glo_num,ngv,nx,nel,vertex,ifcenter)
@@ -365,10 +369,369 @@ c     Use 2*m since tuple = int*8
 c-----------------------------------------------------------------------
 
 
+c-----------------------------------------------------------------------
+      subroutine setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     setup unique ids for dssum  
+c     note:
+c     total number of unique vertices, edges and faces has to be smaller 
+c     than 2**31 (integer-4 limit).
+c     if nelgt < 2**31/12 we're ok for sure (independent of N)! 
+c
+      include 'SIZE'
+      include 'CTIMER'
+      include 'PARALLEL'
+      include 'TOPOL'
+      include 'GEOM'
+
+      integer*8 glo_num(1)
+      integer*8 ngv
+      integer*8 vertex(0:1,0:1,0:1,1)
+      logical ifcenter
+
+      integer*8 edge(0:1,0:1,0:1,3,lelt),enum(12,lelt),fnum(6,lelt)
+      common  /scrmg/ edge,enum,fnum
+
+      parameter (nsafe=8)  ! OFTEN, nsafe=2 suffices
+      integer*8 etuple(4,12*lelt*nsafe),ftuple(5,6,lelt*nsafe)
+      integer ind(12*lelt*nsafe)
+      common  /scrns/ etuple,ind
+      equivalence  (etuple,ftuple)
+
+      logical ifij
+
+      integer e,eg
+      integer*8 gvf(4),facet(4)
+      
+      integer*8 ngvv,ngve,ngvs,ngvi,ngvm,igv,ig0
+      integer*8 n_on_edge,n_on_face,n_in_interior,n_unique_edges
+      integer*8 i8glmax,kswap
+
+      ny   = nx
+      nz   = nx
+      nxyz = nx*ny*nz
+c
+c     Assign hypercube ordering of vertices
+c     -------------------------------------
+c
+c     Count number of unique vertices
+      nlv  = 2**ldim
+      ngvv = i8glmax(vertex,nlv*nel)
+c
+      do e=1,nel    !  Local to global node number (vertex)
+         do k=0,1
+         do j=0,1
+         do i=0,1
+            il  = 1 + (nx-1)*i + nx*(nx-1)*j + nx*nx*(nx-1)*k
+            ile = il + nx*ny*nz*(e-1)
+            glo_num(ile)   = vertex(i,j,k,e)
+         enddo
+         enddo
+         enddo
+      enddo
+      ngv  = ngvv
+c
+      if (nx.eq.2) return
+c
+c     Assign global vertex numbers to SEM nodes on each edge
+c     ------------------------------------------------------
+c
+c     Assign edge labels by bounding vertices.  
+      do e=1,nel
+         do k=0,1
+         do j=0,1
+         do i=0,1
+            edge(i,j,k,1,e) = vertex(i,j,k,e)  ! r-edge
+            edge(j,i,k,2,e) = vertex(i,j,k,e)  ! s-edge
+            edge(k,i,j,3,e) = vertex(i,j,k,e)  ! t-edge
+         enddo
+         enddo
+         enddo
+      enddo
+c
+c     Sort edges by bounding vertices.
+      do i=0,12*nel-1
+         if (edge(0,i,0,1,1).gt.edge(1,i,0,1,1)) then
+            kswap = edge(0,i,0,1,1)
+            edge(0,i,0,1,1) = edge(1,i,0,1,1)
+            edge(1,i,0,1,1) = kswap
+         endif
+         etuple(3,i+1) = edge(0,i,0,1,1)
+         etuple(4,i+1) = edge(1,i,0,1,1)
+      enddo
+c
+c     Assign a number (rank) to each unique edge
+      m    = 4
+      n    = 12*nel
+      nmax = 12*lelt*nsafe  ! nsafe for crystal router factor of safety
+      call gbtuple_rank8(etuple,m,n,nmax,cr_h,nid,np,ind)
+      do i=1,12*nel
+         enum(i,1) = etuple(3,i)
+      enddo
+      n_unique_edges = i8glmax(enum,12*nel)
+
+c
+      n_on_edge = nx-2
+      ngve      = n_unique_edges*n_on_edge
+      do e=1,nel
+         iedg_loc = 0
+c
+c        Edges 1-4
+         do k=0,1
+         do j=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = nx*(nx-1)*j + nx*nx*(nx-1)*k
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e+1).lt.glo_num(i0e+nx)) then
+               do i=2,nx-1                                   ! std forward case
+                  glo_num(i0e+i) = igv + i-1
+               enddo
+            else
+               do i=2,nx-1                                   ! backward case
+                  glo_num(i0e+i) = igv + 1 + n_on_edge-(i-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+         enddo
+c
+c        Edges 5-8
+         do k=0,1
+         do i=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = 1+(nx-1)*i + nx*nx*(nx-1)*k
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e).lt.glo_num(i0e+nx*(nx-1))) then
+               do j=2,nx-1                                   ! std forward case
+                  glo_num(i0e+(j-1)*nx) = igv + j-1
+               enddo
+            else
+               do j=2,nx-1                                   ! backward case
+                  glo_num(i0e+(j-1)*nx) = igv + 1 + n_on_edge-(j-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+         enddo
+c
+c        Edges 9-12
+         do j=0,1
+         do i=0,1
+            igv = ngv + n_on_edge*(enum(iedg_loc+1,e)-1)
+            i0  = 1 + (nx-1)*i + nx*(nx-1)*j
+            i0e = i0 + nxyz*(e-1)
+            if (glo_num(i0e).lt.glo_num(i0e+nx*nx*(nx-1))) then
+               do k=2,nx-1                                   ! std forward case
+                  glo_num(i0e+(k-1)*nx*nx) = igv + k-1
+               enddo
+            else
+               do k=2,nx-1                                   ! backward case
+                  glo_num(i0e+(k-1)*nx*nx) = igv + 1 + n_on_edge-(k-1)
+               enddo
+            endif
+            iedg_loc = iedg_loc + 1
+         enddo
+         enddo
+      enddo
+      ngv   = ngv + ngve
+c
+c     Asign global node numbers on the interior of each face
+c     ------------------------------------------------------ 
+c
+c     Assign faces by 3-tuples 
+c
+c     (The following variables all take the symmetric 
+c     notation of IFACE as arguments:)
+c
+c     ICFACE(i,IFACE) -   Gives the 4 vertices which reside on face IFACE
+c                         as depicted below, e.g. ICFACE(i,2)=2,4,6,8.
+c
+c                        3+-----+4    ^ Y
+c                        /  2  /|     |
+c     Edge 1 extends    /     / |     |
+c       from vertex   7+-----+8 +2    +----> X
+c       1 to 2.        |  4  | /     /
+c                      |     |/     /
+c                     5+-----+6    Z
+c                         3
+c
+      nfaces=ldim*2
+      ncrnr =2**(ldim-1)
+      do e=1,nel
+         do ifac=1,nfaces
+            do icrn=1,ncrnr
+               i                  = icface(icrn,ifac)-1
+               facet(icrn)        = vertex(i,0,0,e)
+            enddo
+            call i8sort(facet,ind,ncrnr)
+            call i8copy(ftuple(3,ifac,e),facet,ncrnr-1)
+         enddo
+      enddo
+
+c     Assign a number (rank) to each unique face
+      m    = 5
+      n    = 6*nel
+      nmax = 6*lelt*nsafe  ! nsafe for crystal router factor of safety
+      call gbtuple_rank8(ftuple,m,n,nmax,cr_h,nid,np,ind)
+      do i=1,6*nel
+         fnum(i,1) = ftuple(3,i,1)
+      enddo
+      n_unique_faces = i8glmax(fnum,6*nel)
+c
+      call dsset (nx,ny,nz)
+      do e=1,nel
+      do iface=1,nfaces
+         i0 = skpdat(1,iface)
+         i1 = skpdat(2,iface)
+         is = skpdat(3,iface)
+         j0 = skpdat(4,iface)
+         j1 = skpdat(5,iface)
+         js = skpdat(6,iface)
+c
+c        On each face, count from minimum global vertex number,
+c        towards smallest adjacent vertex number.  e.g., suppose
+c        the face is defined by the following global vertex numbers:
+c
+c
+c                    11+--------+81
+c                      |c      d|
+c                      |        |
+c                      |        |
+c                      |a      b|
+c                    15+--------+62
+c                          
+c        We would count from c-->a, then towards d.
+c
+
+         gvf(1) = glo_num(i0+nx*(j0-1)+nxyz*(e-1))
+         gvf(2) = glo_num(i1+nx*(j0-1)+nxyz*(e-1))
+         gvf(3) = glo_num(i0+nx*(j1-1)+nxyz*(e-1))
+         gvf(4) = glo_num(i1+nx*(j1-1)+nxyz*(e-1))
+         call i8rank(gvf,ind,4)
+
+c        ind(1) tells which element of gvf() is smallest.
+
+         ifij = .false.
+         if (ind(1).eq.1) then
+            idir =  1
+            jdir =  1
+            if (gvf(2).lt.gvf(3)) ifij = .true.
+         elseif (ind(1).eq.2) then
+            idir = -1
+            jdir =  1
+            if (gvf(1).lt.gvf(4)) ifij = .true.
+         elseif (ind(1).eq.3) then
+            idir =  1
+            jdir = -1
+            if (gvf(4).lt.gvf(1)) ifij = .true.
+         elseif (ind(1).eq.4) then
+            idir = -1
+            jdir = -1
+            if (gvf(3).lt.gvf(2)) ifij = .true.
+         endif
+c
+         if (idir.lt.0) then
+            it=i0
+            i0=i1
+            i1=it
+            is=-is
+         endif
+c
+         if (jdir.lt.0) then
+            jt=j0
+            j0=j1
+            j1=jt
+            js=-js
+         endif
+
+         nxx = nx*nx
+         n_on_face = (nx-2)*(ny-2)
+         ngvs  = n_unique_faces*n_on_face
+         ig0 = ngv + n_on_face*(fnum(iface,e)-1)
+         if (ifij) then
+            k=0
+            l=0
+            do j=j0,j1,js
+            do i=i0,i1,is
+               k=k+1
+c              this is a serious kludge to stay on the face interior
+               if (k.gt.nx.and.k.lt.nxx-nx .and.
+     $            mod(k,nx).ne.1.and.mod(k,nx).ne.0) then
+c                 interior
+                  l = l+1
+                  glo_num(i+nx*(j-1)+nxyz*(e-1)) = l + ig0
+               endif
+            enddo
+            enddo
+         else
+            k=0
+            l=0
+            do i=i0,i1,is
+            do j=j0,j1,js
+               k=k+1
+c              this is a serious kludge to stay on the face interior
+               if (k.gt.nx.and.k.lt.nxx-nx .and.
+     $            mod(k,nx).ne.1.and.mod(k,nx).ne.0) then
+c                 interior
+                  l = l+1
+                  glo_num(i+nx*(j-1)+nxyz*(e-1)) = l + ig0
+               endif
+            enddo
+            enddo
+         endif
+      enddo
+      enddo
+      ngv   = ngv + ngvs
+
+c     Finally,  number interiors (only ifcenter=.true.)
+c     -------------------------------------------------
+
+      n_in_interior = (nx-2)*(ny-2)*(nz-2)
+      ngvi = n_in_interior*nelgt
+      if (ifcenter) then
+         do e=1,nel
+            ig0 = ngv + n_in_interior*(lglel(e)-1)
+            l = 0
+            do k=2,nz-1
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nx*ny*(k-1)+nxyz*(e-1)) = ig0+l
+            enddo
+            enddo
+            enddo
+         enddo
+         ngv = ngv + ngvi
+      else
+         do e=1,nel
+            l = 0
+            do k=2,nz-1
+            do j=2,ny-1
+            do i=2,nx-1
+               l = l+1
+               glo_num(i+nx*(j-1)+nx*ny*(k-1)+nxyz*(e-1)) = 0
+            enddo
+            enddo
+            enddo
+         enddo
+      endif
+
+c     Quick check on maximum #dofs:
+      m    = nxyz*nelt
+      ngvm = i8glmax(glo_num,m)
+      ngvv = ngvv + ngve + ngvs  ! number of unique ids w/o interior 
+      ngvi = ngvi + ngvv         ! total number of unique ids 
+      if (nio.eq.0 .and. loglevel.gt.1) 
+     $  write(6,1) nx,ngvv,ngvi,ngv,ngvm
+    1 format('   setvert3d:',i4,4i16)
+
+      return
+      end
+c-----------------------------------------------------------------------
 
 
 c-----------------------------------------------------------------------
-      subroutine setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      subroutine setvert3d_legacy(glo_num,ngv,nx,nel,vertex,ifcenter)
 c
 c     setup unique ids for dssum
 c     note:
@@ -3873,3 +4236,58 @@ c
       end
 
 #endif
+
+c-----------------------------------------------------------------------
+
+      subroutine i8rank(a,ind,n)
+
+c     Use Heap Sort (p 233 Num. Rec.), 5/26/93 pff.
+
+      integer*8 a(1),q
+      integer ind(1)
+
+      if (n.le.1) return
+      do 10 J=1,N
+         IND(j)=j
+   10 continue
+C
+      if (n.eq.1) return
+      L=n/2+1
+      ir=n
+  100 continue
+         IF (l.gt.1) THEN
+            l=l-1
+            indx=ind(l)
+            q=a(indx)
+         ELSE
+            indx=ind(ir)
+            q=a(indx)
+            ind(ir)=ind(1)
+            ir=ir-1
+            if (ir.eq.1) then
+               ind(1)=indx
+               return
+            endif
+         ENDIF
+         i=l
+         j=l+l
+  200    continue
+         if (j.LE.ir) then
+            if (j.LT.ir) then
+               if ( a(ind(J)).LT.a(ind(J+1)) ) J=J+1
+            endif
+            if (q.lt.a(ind(J))) then
+               ind(i)=ind(j)
+               i=j
+               j=j+j
+            else
+               j=ir+1
+            endif
+         goto 200
+         endif
+         ind(i)=indx
+      goto 100
+      end
+c-----------------------------------------------------------------------
+
+
