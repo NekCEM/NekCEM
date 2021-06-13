@@ -1,3 +1,123 @@
+      subroutine setupds(gs_handle,nx,ny,nz,nel,melg,vertex,glo_num)
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'NONCON'
+
+      integer gs_handle
+      integer*8 vertex(1)
+      integer*8 glo_num(1),ngv
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      t0 = dnekclock()
+
+c     Global-to-local mapping for gs
+      call set_vert(glo_num,ngv,nx,nel,vertex,.false.)
+
+c     Initialize gather-scatter code
+      ntot      = nx*ny*nz*nel
+      call gs_setup(gs_handle,glo_num,ntot,nekcomm,mp)
+
+c     call gs_chkr(glo_num)
+
+      t1 = dnekclock() - t0
+      if (nio.eq.0) then
+         write(6,1) t1,gs_handle,nx,ngv,melg
+    1    format('   setupds time',1pe11.4,' seconds ',2i3,2i12)
+      endif
+c
+      return
+      end
+c-----------------------------------------------------------------------
+c
+      subroutine set_vert(glo_num,ngv,nx,nel,vertex,ifcenter)
+c
+c     Given global array, vertex, pointing to hex vertices, set up
+c     a new array of global pointers for an nx^ldim set of elements.
+c
+      include 'SIZE'
+      include 'INPUT'
+c
+      integer*8 glo_num(1),ngv
+      integer*8 vertex(1)
+      logical ifcenter
+
+      if (if3d) then
+         call setvert3d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      else
+         call setvert2d(glo_num,ngv,nx,nel,vertex,ifcenter)
+      endif
+
+c     Check for single-element periodicity 'p' bc
+      nz = 1
+      if (if3d) nz = nx
+      call check_p_bc(glo_num,nx,nx,nz,nel)
+
+      if(nio.eq.0 .and. loglevel.gt.2) 
+     $  write(6,*) 'call usrsetvert'
+      call usrsetvert(glo_num,nel,nx,nx,nz)
+      if(nio.eq.0 .and. loglevel.gt.2) 
+     $  write(6,'(A,/)') ' done :: usrsetvert'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine check_p_bc(glo_num,nx,ny,nz,nel)
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      integer*8 glo_num(nx,ny,nz,nel)
+      integer*8 gmn
+
+      integer e,f,fo,ef,efo
+      integer eface0(6)
+      save    eface0
+      data    eface0 / 4,2,1,3,5,6 /
+
+      ifld = 2
+      if (ifflow) ifld = 1
+
+      nface=2*ldim
+      do e=1,nelt
+      do f=1,nface,2
+         fo  = f+1
+         ef  = eface0(f)
+         efo = eface0(fo)
+         if (cbc(ef,e,ifld).eq.'p  '.and.cbc(efo,e,ifld).eq.'p  ') then
+            if (f.eq.1) then  ! r=-/+1
+               do k=1,nz
+               do j=1,ny
+                  gmn = min(glo_num(1,j,k,e),glo_num(nx,j,k,e))
+                  glo_num(1 ,j,k,e) = gmn
+                  glo_num(nx,j,k,e) = gmn
+               enddo
+               enddo
+            elseif (f.eq.3) then  ! s=-/+1
+               do k=1,nz
+               do i=1,nx
+                  gmn = min(glo_num(i,1,k,e),glo_num(i,ny,k,e))
+                  glo_num(i,1 ,k,e) = gmn
+                  glo_num(i,ny,k,e) = gmn
+               enddo
+               enddo
+            else
+               do j=1,ny
+               do i=1,nx
+                  gmn = min(glo_num(i,j,1,e),glo_num(i,j,nz,e))
+                  glo_num(i,j,1 ,e) = gmn
+                  glo_num(i,j,nz,e) = gmn
+               enddo
+               enddo
+            endif
+         endif
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine dssum_part1(u,nx,ny,nz)
       include 'SIZE'
