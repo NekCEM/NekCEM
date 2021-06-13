@@ -1255,24 +1255,6 @@ c fluid elements
 
       algo = 0 ! 0 - Lanczos, 1 - MG
       nel = neliv
-      if (nid.eq.0) then
-         if(nid.eq.0) write(6,*) ' lelt', lelt
-         if(nid.eq.0) write(6,*) ' nel', nel 
-         if(nid.eq.0) write(6,*) ' nlv', nlv
-         if(nid.eq.0) write(6,*) ' meshPartitioner', meshPartitioner
-         do i=1,lelt
-            if(nid.eq.0) write(6,*) ' i', i
-            if(nid.eq.0) write(6,*) ' eid8(i)', eid8(i)
-         enddo
-         do i=1,lelt*2**ldim
-            if(nid.eq.0) write(6,*) ' i', i
-            if(nid.eq.0) write(6,*) ' vtx8(i)', vtx8(i)
-         enddo
-         do i=1,ldim*lelt*2**ldim
-            if(nid.eq.0) write(6,*) ' i', i
-            if(nid.eq.0) write(6,*) ' xyz(i)', xyz(i)
-         enddo
-      endif
       if(nid.eq.0) write(6,*) ' Call fpartMesh'
       call fpartMesh(eid8,vtx8,xyz,lelt,nel,nlv,nekcomm,
      $  meshPartitioner,algo,loglevel,ierr)
@@ -1723,10 +1705,6 @@ c-----------------------------------------------------------------------
                   wk(i,m) = wk(i-1,m)
                enddo
                wk(1,m) = eg
-c TODO: for debugging
-               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
-               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
-               if(nid.eq.0) write(6,*) (wk(k,m),k=2,mdw)
             enddo
 
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
@@ -2075,12 +2053,8 @@ c-----------------------------------------------------------------------
             do eg=eg0+1,eg1
                m = m+1
                read(80,*,end=998) (wk(k,m),k=2,mdw)
-c TODO: for debugging
-               if(nid.eq.0) write(6,'(A,I5)') ' m ', m
                if (.not.ifgfdm) gllnid(eg) = wk(2,m)  !proc map,  must still be divided
                wk(1,m) = eg                           !eg=global node id
-               if(nid.eq.0) write(6,*) (wk(k,m),k=1,mdw)
-               if(nid.eq.0) write(6,*) (wk(k,m),k=2,mdw)
             !  write(6,*) (wk(k,m),k=1,mdw)
             enddo
             if (ipass.lt.npass) call csend(ipass,wk,len,ipass,0) !send to ipass
