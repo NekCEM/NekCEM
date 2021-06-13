@@ -69,7 +69,12 @@ build_3rdparty
 
 echo "========= Start configurenek ========"
 # TODO: very basic...
-configurenek --FC mpif77 $1 $2 --extra_FFLAGS -DPROCMAP -DPARRSB -DPARMETIS --extra_CFLAGS -DPROCMAP -DPARRSB -DPARMETIS
+# ma2,map
+configurenek --FC mpif77 $1 $2 
+# co2 without DPROCMAP
+#configurenek --FC mpif77 $1 $2 --extra_FFLAGS -DPARRSB -DPARMETIS --extra_CFLAGS -DPARRSB -DPARMETIS
+# co2 with DPROCMAP:
+#configurenek --FC mpif77 $1 $2 --extra_FFLAGS -DPROCMAP -DPARRSB -DPARMETIS --extra_CFLAGS -DPROCMAP -DPARRSB -DPARMETIS
 
 echo "======== Make User file ========"
 ./mkuserfile

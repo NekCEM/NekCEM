@@ -139,26 +139,26 @@ C
      $   call exitti('nelt > lelt!$',nelt)
 
       ! setup gllnid + gllel
-c#if defined(DPROCMAP)
-c      call dProcmapInit()  
-c      dProcmapCache = .false.
-c#endif
+#if defined(DPROCMAP)
+      call dProcmapInit()  
+      dProcmapCache = .false.
+#endif
       nelB = igl_running_sum(nelt) - nelt
       do i = 1,nelt
          ieg = nelB + i
          lglel(i) = ieg 
          if (ieg.lt.1 .or. ieg.gt.nelgt)
      $      call exitti('invalid ieg!$',ieg)
-c#if defined(DPROCMAP)
-c         ibuf(1) = i
-c         ibuf(2) = nid
-c         call dProcmapPut(ibuf,2,0,ieg)
-c#else
+#if defined(DPROCMAP)
+         ibuf(1) = i
+         ibuf(2) = nid
+         call dProcmapPut(ibuf,2,0,ieg)
+#else
          gllnid(ieg) = nid
          gllel(ieg) = i 
-c#endif
+#endif
       enddo
-c#if !defined(DPROCMAP)
+#if !defined(DPROCMAP)
       npass = 1 + nelgt/lelt
       k=1
       do ipass = 1,npass
@@ -168,7 +168,7 @@ c#if !defined(DPROCMAP)
          if (m.gt.0) call igop(gllel(k) ,iwork,'+  ',m)
          k = k+m
       enddo
-c#endif
+#endif
 
       ! read coord for RCB and/or connectivity
       if (nid_io.eq.0) write(6,*) 'Calling read_re2_data'
@@ -182,7 +182,7 @@ c#endif
       itmp = gllel(0)  ! reset last element cache
       dProcmapCache = .true.
 
-c#if !defined(DPROCMAP)
+#if !defined(DPROCMAP)
       if (nid_io.eq.0) write(6,*) 'Compute global to local map(no proc)'
       IEL=0
       CALL IZERO(GLLEL,NELGT)
@@ -213,7 +213,7 @@ c        write(6,*) 'map2 ieg:',ieg,nelv,nelt,nelgv,nelgt
          if (mid.eq.nid) lglel(ie)=ieg
       enddo
       if (nid_io.eq.0) write(6,*) 'done:: set_proc_map() (Nek5000)'
-c#endif
+#endif
 
       return
       end
