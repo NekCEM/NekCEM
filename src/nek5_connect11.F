@@ -1490,6 +1490,9 @@ c     Quick check on maximum #dofs:
 c-----------------------------------------------------------------------
       subroutine get_vert
 #if !defined(PARRSB) && !defined(PARMETIS)
+# if defined(DPROCMAP)
+      call exitti('DPROCMAP requires PARRSB or PARMETIS!$',0)
+# else
       include 'SIZE'
       include 'TOTAL'
       include 'ZPER'
@@ -1513,6 +1516,7 @@ c-----------------------------------------------------------------------
       call get_vert_map(vertex, ncrnr, nelgt, '.map',ifgfdm)
 
       return
+# endif
 #else
       include 'SIZE'
       include 'TOTAL'
@@ -1568,7 +1572,6 @@ c-----------------------------------------------------------------------
 
       logical ifbswap, ifread_con
 
-c#if defined(PARRSB) || defined(PARMETIS)
       neli = nelt
       ifread_con = .true.
       if(nid.eq.0) write(6,*) ' Calling read_con'
@@ -1693,16 +1696,16 @@ c solid elements
          enddo
       endif
 
-c#ifdef DPROCMAP
-c      do i = 1,nelt
-c         ieg = lglel(i)
-c         if (ieg.lt.1 .or. ieg.gt.nelgt) 
-c     $      call exitti('invalid ieg!$',ieg)
-c         ibuf(1) = i
-c         ibuf(2) = nid
-c         call dProcmapPut(ibuf,2,0,ieg)
-c      enddo
-c#else
+#ifdef DPROCMAP
+      do i = 1,nelt
+         ieg = lglel(i)
+         if (ieg.lt.1 .or. ieg.gt.nelgt) 
+     $      call exitti('invalid ieg!$',ieg)
+         ibuf(1) = i
+         ibuf(2) = nid
+         call dProcmapPut(ibuf,2,0,ieg)
+      enddo
+#else
       call izero(gllnid,nelgt)
       do i = 1,nelt
          ieg = lglel(i)
@@ -1716,9 +1719,7 @@ c#else
          if (m.gt.0) call igop(gllnid(k),iwork,'+  ',m)
          k = k+m
       enddo
-c#endif
-
-c#endif
+#endif
 
       return
       end
@@ -1928,16 +1929,16 @@ c solid elements
          enddo
       endif
 
-c#ifdef DPROCMAP
-c      do i = 1,nelt
-c         ieg = lglel(i)
-c         if (ieg.lt.1 .or. ieg.gt.nelgt) 
-c     $      call exitti('invalid ieg!$',ieg)
-c         ibuf(1) = i
-c         ibuf(2) = nid
-c         call dProcmapPut(ibuf,2,0,ieg)
-c      enddo
-c#else
+#ifdef DPROCMAP
+      do i = 1,nelt
+         ieg = lglel(i)
+         if (ieg.lt.1 .or. ieg.gt.nelgt) 
+     $      call exitti('invalid ieg!$',ieg)
+         ibuf(1) = i
+         ibuf(2) = nid
+         call dProcmapPut(ibuf,2,0,ieg)
+      enddo
+#else
       call izero(gllnid,nelgt)
       do i = 1,nelt
          ieg = lglel(i)
@@ -1951,7 +1952,7 @@ c#else
          if (m.gt.0) call igop(gllnid(k),iwork,'+  ',m)
          k = k+m
       enddo
-c#endif
+#endif
 
 
 #endif
