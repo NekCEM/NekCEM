@@ -2252,7 +2252,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine mpi_type_get_extent(ikey,ib,isize,ierr)
 
-      include "mpi_dummy.h"
+      include "nek5_mpi_dummy.h"
       integer*8 ib, isize
 
       if (ikey.eq.MPI_DOUBLE_PRECISION) isize = 8 
