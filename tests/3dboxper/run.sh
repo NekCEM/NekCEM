@@ -1,5 +1,5 @@
 cd ../../
-make uninstall
+make uninstall_inplace
 make install
 
 cd tests/3dboxper/

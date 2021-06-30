@@ -65,16 +65,16 @@ export PARRSB_OPT
 export GSLIB_OPT
 
 
-build_3rdparty
+#build_3rdparty
 
 echo "========= Start configurenek ========"
 # TODO: very basic...
 # ma2,map
-configurenek --FC mpif77 $1 $2 
+#configurenek --FC mpif77 $1 $2 
 # co2 without DPROCMAP
-#configurenek --FC mpif77 $1 $2 --extra_FFLAGS -DPARRSB -DPARMETIS --extra_CFLAGS -DPARRSB -DPARMETIS
+#configurenek --FC mpif77 --extra-FFLAGS ' -DPARRSB -DPARMETIS' --extra-CFLAGS '-DPARRSB -DPARMETIS' $1 $2 
 # co2 with DPROCMAP:
-#configurenek --FC mpif77 $1 $2 --extra_FFLAGS -DPROCMAP -DPARRSB -DPARMETIS --extra_CFLAGS -DPROCMAP -DPARRSB -DPARMETIS
+configurenek --FC mpif77 --extra-FFLAGS ' -DPROCMAP -DPARRSB -DPARMETIS' --extra-CFLAGS '-DPROCMAP -DPARRSB -DPARMETIS' $1 $2 
 
 echo "======== Make User file ========"
 ./mkuserfile

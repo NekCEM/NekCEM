@@ -61,11 +61,6 @@ C     Output the processor-element map:
            ENDDO
  1310      FORMAT(' RANK',I6,' IEG',8I8)
  1315      FORMAT('     ',6X,'    ',8I8)
-            
-           write(6,*) 'Print gllel:'
-           do i=1,lelg
-              write(6,*) gllel(i)
-           enddo
         else
            mtype = nid
            call crecv(mtype,idum,4)                ! hand-shake
