@@ -56,6 +56,3 @@ nekcem
 # Configure artifacts for tests
 tests/*/src
 tests/*/Makefile
-
-
-.DS_Store
