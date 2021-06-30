@@ -238,7 +238,7 @@ c
       REAL*8 dnekclock,t0
 c
       t0 = dnekclock()
-      if (nid_io.eq.0) write(6,*) 'call   set_proc_map()'
+      if (nid_io.eq.0) write(6,*) 'call   set_proc_map_legacy()'
       if (nid_io.eq.0) write(6,*) 'ifgtp/gfdm/zper',ifgtp,ifgfdm,ifzper
 
       if (.not.ifgtp) then

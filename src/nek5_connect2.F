@@ -389,7 +389,7 @@ C     Read mesh info
       call bcast(nelgv,ISIZE)
       call bcast(nelgt,ISIZE)
       call bcast(h5mfle,132)
-
+      
       ifre2 =.false.
       if (nelgs.lt.0) then 
           write(6,*) '  Reading .re2'
@@ -415,7 +415,7 @@ C     Read mesh info
       if (nid_io.eq.0) write(6,*) 'gfdm/ifgtp/ifre2',ifgfdm,ifgtp,ifre2
 
       if (ifre2) then
-         call bin_rd1(ifbswap)  ! rank0 will read mesh data + distribute
+          call read_re2_data(ifbswap, .true., .true., .true.)
       else
          maxrd = 32             ! max # procs to read at once
          mread = (np-1)/maxrd+1 ! mod param
@@ -1750,6 +1750,8 @@ c-----------------------------------------------------------------------
          m = indx2(re2fle,132,' ',1)-1
          call chcopy(fname,re2fle,m)
 
+c TODO: hardcoded byte_close
+         call byte_close(ierr)
          call byte_open(fname,ierr)
          if(ierr.ne.0) goto 100
          call byte_read(hdr,20,ierr)

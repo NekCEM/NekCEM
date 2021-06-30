@@ -14,7 +14,8 @@ c-----------------------------------------------------------------------
  
  
       etime0 = dnekclock_sync()
-
+      
+c TODO: incorrectly set ifflow
                   ibc = 2
       if (ifflow) ibc = 1
 
@@ -53,7 +54,7 @@ c-----------------------------------------------------------------------
 #else
       call byte_open(re2fle,ierr)
       call byte_read(idummy,21,ierr) ! skip hdr+endian code 
-
+      
       call bin_rd1_mesh (ifbswap)
       call bin_rd1_curve(ifbswap)
       do ifield = ibc,nfldt
@@ -64,6 +65,8 @@ c-----------------------------------------------------------------------
 #endif
 #endif
 c TODO: no mpi io first
+c TODO: hardcoded byte_close
+      call byte_close(re2fle,ierr)
       call byte_open(re2fle,ierr)
       call byte_read(idummy,21,ierr) ! skip hdr+endian code 
 
@@ -403,11 +406,13 @@ c-----------------------------------------------------------------------
       call err_chk(ierr,' Cannot find re2 file!$')
 
       if (nid.eq.0) then
+c TODO: hardcoded byte_close
+         call byte_close(ierr)
          call byte_open(fname,ierr)
          if(ierr.ne.0) goto 100
          call byte_read(hdr,20,ierr)
          if(ierr.ne.0) goto 100
-
+         
          read (hdr,1) version,nelgt,ldimr,nelgv
     1    format(a5,i9,i3,i9)
  

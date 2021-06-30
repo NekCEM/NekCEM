@@ -65,7 +65,7 @@ export PARRSB_OPT
 export GSLIB_OPT
 
 
-build_3rdparty
+#build_3rdparty
 
 echo "========= Start configurenek ========"
 # TODO: very basic...
