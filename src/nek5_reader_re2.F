@@ -14,14 +14,9 @@ c-----------------------------------------------------------------------
  
  
       etime0 = dnekclock_sync()
-      
-c TODO: incorrectly set ifflow
-                  ibc = 2
-      if (ifflow) ibc = 1
 
-                  nfldt = 1
-      if (ifheat) nfldt = 2+npscal
-      if (ifmhd ) nfldt = 2+npscal+1
+      ibc   = 1
+      nfldt = nfield
 
       ! first field to read
       if (param(33).gt.0) ibc = int(param(33))

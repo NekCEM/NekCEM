@@ -46,6 +46,8 @@ C
 
       call rzero(param,200)
       call rzero(uparam,20)
+      
+      param(8)  = 1    ! number of fields
 
       param(10) = 0    ! stop at numSteps
       param(14) = 0    ! iostep
@@ -832,12 +834,18 @@ c set partitioner options
          meshPartitioner=4
       endif
       
-c TODO: no error checking
       call finiparser_getDbl(d_out,'electric:permittivity',ifnd)
       if(ifnd .eq. 1) permittivity = d_out
 
       call finiparser_getDbl(d_out,'magnetic:permeability',ifnd)
       if(ifnd .eq. 1) permeability = d_out
+
+      nfield = 1
+      call finiparser_getDbl(d_out,'general:nfield',ifnd)
+      if(ifnd.eq.1 .and. d_out.gt.0) then
+        nfield = d_out
+        NPSCAL = nfield
+      endif
 
 100   if(ierr.eq.0) call finiparser_dump()
       return
