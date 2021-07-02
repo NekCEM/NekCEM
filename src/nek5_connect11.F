@@ -1726,16 +1726,11 @@ c solid elements
 c-----------------------------------------------------------------------
 #endif
 
-
-
 c-----------------------------------------------------------------------
       subroutine get_vert_map(vertex, nlv, nel, suffix, ifgfdm)
 
       include 'SIZE'
       include 'TOTAL'
-c      character*132 mapfle
-c      character*1   mapfle1(132)
-c      equivalence  (mapfle,mapfle1)
 
       logical ifma2,ifmap
 
@@ -1763,25 +1758,17 @@ c      equivalence  (mapfle,mapfle1)
 
       logical ifbswap, ifread_con
 
-
       ierr = 0
+      ifmap = .false.
       ifma2 = .false.
 
       if (nid.eq.0) then
-         lfname = ltrunc(reafle,132) - 4
-c         call blank (mapfle,132)
-c         call chcopy(mapfle,reafle,lfname)
-c         call chcopy(mapfle1(lfname+1),'.map',4)
          inquire(file=mapfle, exist=ifmap)
-
-         if (.not.ifmap) then
-c            call chcopy(mapfle1(lfname+1),'.ma2',4)
-            inquire(file=ma2fle, exist=ifma2)
-         endif
-
+         inquire(file=ma2fle, exist=ifma2)
         if(.not.ifmap .and. .not.ifma2) ierr = 1 
       endif
       call err_chk(ierr,' Cannot find map file!$')
+      call bcast(ifmap,lsize)
       call bcast(ifma2,lsize)
       ierr = 0
 

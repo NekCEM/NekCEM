@@ -906,6 +906,7 @@ C
       call bcast(idpss    ,  ldimt*isize)
 
       call bcast(meshPartitioner,isize)
+      call bcast(nfield,isize)
 
       call bcast(iftmsh   , (ldimt1+1)*lsize)
       call bcast(ifprojfld, (ldimt1+1)*lsize)
