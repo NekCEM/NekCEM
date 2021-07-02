@@ -731,7 +731,7 @@ c     Set default logicals
       ifflow = .false.
       ifmvbd = .false.
       ifheat = .false.
-      ifsplit = .true.
+      ifsplit = .true. ! TODO: default ifsplit = true?
       ifdoit = .false.
       iftet = .false.
       ifhex = .false.

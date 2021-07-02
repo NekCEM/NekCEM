@@ -347,7 +347,7 @@ c
       if (parfound) then
          if(nio.eq.0) write(6,'(A,A)') ' Reading ', parfle
          call readat_par
-         goto 99
+         return
       endif  
 
 c     Test timer accuracy
@@ -389,7 +389,7 @@ C     Read mesh info
       call bcast(nelgv,ISIZE)
       call bcast(nelgt,ISIZE)
       call bcast(h5mfle,132)
-      
+
       ifre2 =.false.
       if (nelgs.lt.0) then 
           write(6,*) '  Reading .re2'
@@ -464,7 +464,7 @@ c     suffice for now.   5/6/10
 c     if (ifchar.and.(nelgv.ne.nelgt)) call exitti(
 c    $ 'ABORT: IFCHAR curr. not supported w/ conj. ht transfer$',nelgv)
 
- 99   return
+      return
       END
 
 c-----------------------------------------------------------------------

@@ -114,8 +114,8 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
     if not FFLAGS:
         FFLAGS = ['-I.', '-O3']
         if backend == 'gfortran':
-            FFLAGS += ['-DMPI', '-DMPIIO', 
-                       '-fdefault-real-8','-fdefault-double-8','-std=legacy']
+            FFLAGS += ['-DMPI', '-DMPIIO', '-fdefault-real-8',
+                       '-fdefault-double-8','-std=legacy']
         elif backend == 'ifort':
             FFLAGS += ['-DMPI', '-DMPIIO', '-r8']
         elif backend == 'pgfortran':
@@ -129,7 +129,8 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
         FFLAGS = FFLAGS.split()
 
     if not CFLAGS:
-        CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG','-DAMG_DUMP']
+        CFLAGS = ['-O3', '-DMPIIO', '-DMPI', '-DGLOBAL_LONG_LONG',
+                  '-DAMG_DUMP']
         if backend == 'gfortran':
             CFLAGS += ['-DUNDERSCORE', '-DGS_NEW_LOOPS']
         elif backend == 'ifort':
@@ -218,7 +219,7 @@ def main():
     parser.add_argument('--LDFLAGS', help='Linker flags')
     parser.add_argument('--extra-LDFLAGS', help='Extra linker flags')
     args = parser.parse_args()
-    usr = args.usr + '.F'
+    usr = args.usr + '.usr'
     if args.arch:
         if args.FC or args.FFLAGS or args.CC or args.CFLAGS:
             raise ValueError("can't set arch and compilers/flags")

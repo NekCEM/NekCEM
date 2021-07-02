@@ -68,11 +68,11 @@ void byte_reverse(float *buf, int *nn,int *ierr)
 
   if (*nn<0)
   {
-    printf("byte_reverse() :: n must be positive\n"); 
+    printf("byte_reverse() :: n must be positive\n");
     *ierr=1;
     return;
   }
-  
+
   for (ptr=(char *)buf,n=*nn; n--; ptr+=4)
   {
      SWAP(ptr[0],ptr[3])
@@ -118,7 +118,7 @@ void byte_open(char *n,int *ierr,int nlen)
 
   if (nlen>MAX_NAME)
   {
-    printf("byte_open() :: invalid string length\n"); 
+    printf("byte_open() :: invalid string length\n");
     *ierr=1;
     return;
   }
@@ -166,7 +166,7 @@ void byte_write(float *buf, int *n,int *ierr)
 
   if (*n<0)
   {
-    printf("byte_write() :: n must be positive\n"); 
+    printf("byte_write() :: n must be positive\n");
     *ierr=1;
     return;
   }
@@ -175,7 +175,7 @@ void byte_write(float *buf, int *n,int *ierr)
   {
     if (!(fp=fopen(name,"wb")))
     {
-      printf("byte_write() :: fopen failure!\n"); 
+      printf("byte_write() :: fopen failure!\n");
       *ierr=1;
       return;
     }
@@ -190,7 +190,7 @@ void byte_write(float *buf, int *n,int *ierr)
     }
   else
   {
-      printf("byte_write() :: can't fwrite after freading!\n"); 
+      printf("byte_write() :: can't fwrite after freading!\n");
       *ierr=1;
       return;
   }
@@ -211,7 +211,7 @@ void byte_read(float *buf, int *n,int *ierr)
      if (!(fp=fopen(name,"rb")))
      {
         printf("%s\n",name);
-        printf("byte_read() :: fopen failure2!\n"); 
+        printf("byte_read() :: fopen failure2!\n");
         *ierr=1;
         return;
      }
@@ -239,7 +239,7 @@ void byte_read(float *buf, int *n,int *ierr)
   }
   else
   {
-     printf("byte_read() :: can't fread after fwriting!\n"); 
+     printf("byte_read() :: can't fread after fwriting!\n");
      *ierr=1;
      return;
   }

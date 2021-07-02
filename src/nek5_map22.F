@@ -55,9 +55,9 @@ C     Output the processor-element map:
               call csend(mtype,idum,4,inid,0)            ! handshake
               call crecv(mtype,inelt,4)               ! nelt of other cpus
               N8 = min(8,inelt)
-              write(6 ,1310) inid,(lglel(ie),ie=1,n8)
-              IF (inelt.gt.8)
-     &           write(6 ,1315) (lglel(ie),ie=9,inelt)
+c             write(6 ,1310) inid+1,(lglel(ie),ie=1,n8)
+c             IF (inelt.gt.8)
+c    &           write(6 ,1315) (lglel(ie),ie=9,inelt)
            ENDDO
  1310      FORMAT(' RANK',I6,' IEG',8I8)
  1315      FORMAT('     ',6X,'    ',8I8)
@@ -66,10 +66,6 @@ C     Output the processor-element map:
            call crecv(mtype,idum,4)                ! hand-shake
            call csend(mtype,nelt,4,0,0)            ! nelt
         endif
-      endif
-
-      if(nid.eq.1) then
-         write(6,*) 'Rank',1,(lglel(ie),ie=1,9)
       endif
 
 C     Check elemental distribution
