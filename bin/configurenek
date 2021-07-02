@@ -165,7 +165,6 @@ def configure(FC, FFLAGS, CC, CFLAGS, LD, LDFLAGS):
     else:
         LDFLAGS = LDFLAGS.split()
 
-    # TODO: HARDCODED
     USR_LFLAGS = "-L{0}/3rd_party/blasLapack -lblasLapack -L{0}/3rd_party/gslib/lib -lgs -L{0}/3rd_party/parRSB/lib -lparRSB -L{0}/3rd_party/parMETIS/lib -lparmetis -lmetis".format(NEK)
 
     USR_IFLAGS = "-I{0}/3rd_party/gslib/include -I{0}/3rd_party/parRSB/include -I{0}/3rd_party/parMETIS/include".format(NEK)

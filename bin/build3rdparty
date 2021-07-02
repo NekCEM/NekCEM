@@ -1,0 +1,51 @@
+#!/bin/bash
+# set defaults # TODO: hardcoded, ignore flags in compilation for now....
+: ${NEKCEM_SOURCE_ROOT:="/usr/local/NekCEM"}
+: ${FC:="mpif77"}
+#: ${CC:="mpicc"}
+CC="mpicc"
+export CC
+SOURCE_ROOT_BLAS="$NEKCEM_SOURCE_ROOT/3rd_party/blasLapack"
+export SOURCE_ROOT_BLAS
+SOURCE_ROOT_GSLIB="$NEKCEM_SOURCE_ROOT/3rd_party/gslib"
+export SOURCE_ROOT_GSLIB
+SOURCE_ROOT_PARRSB="$NEKCEM_SOURCE_ROOT/3rd_party/parRSB"
+export SOURCE_ROOT_PARRSB
+SOURCE_ROOT_PARMETIS="$NEKCEM_SOURCE_ROOT/3rd_party/parMETIS"
+export SOURCE_ROOT_PARMETIS
+
+function build_3rdparty() {
+  printf "building 3rd-party dependencies ... "
+  set -o pipefail
+
+  cd $SOURCE_ROOT_BLAS
+  ./install 2>&1 
+
+  cd $SOURCE_ROOT_GSLIB
+  ./install 2>&1
+
+  cd $SOURCE_ROOT_PARRSB
+  ./install 2>&1 
+
+  cd $SOURCE_ROOT_PARMETIS
+  ./install 2>&1
+
+  printf "done\n"
+  set +o pipefail
+}
+
+# TODO: all hardcoded!!!
+MPI=1 # TODO: only default option
+MPIIO=1
+NOMPIIO=0
+GSLIB_OPT+=" DESTDIR=.."
+GSLIB_OPT+=" MPI=$MPI MPIIO=$MPIIO"
+GSLIB_OPT+=" ADDUS=$UNDERSCORE USREXIT=0 BLAS=2"
+PARRSB_OPT+=" DESTDIR=.. UNDERSCORE=$UNDERSCORE MPI=$MPI BLAS=1"
+PARRSB_OPT+=" BLASLIBPATH=${SOURCE_ROOT_BLAS}" 
+PARRSB_OPT+=" GSLIBPATH=${SOURCE_ROOT_GSLIB}"
+export PARRSB_OPT
+export GSLIB_OPT
+
+
+build_3rdparty
