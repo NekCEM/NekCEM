@@ -11,6 +11,9 @@ configurenek --FC mpif77 $1 $2
 #configurenek --FC mpif77 --extra-FFLAGS ' -DPROCMAP -DPARRSB -DPARMETIS' --extra-CFLAGS '-DPROCMAP -DPARRSB -DPARMETIS' $1 $2
 
 echo "======== Make User file ========"
+
+CASENAME=$2
+export CASENAME
 ./mkuserfile
 
 echo "========= Complete ========"
