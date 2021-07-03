@@ -1961,6 +1961,8 @@ c-----------------------------------------------------------------------
       integer wk,e,eg,eg0,eg1
       integer neli,nnzi
       integer iok,ierr
+      integer ma2_h
+      integer*8 lma2off_b,count_b
 
       character*132 hdr
       character*5   version
@@ -1986,6 +1988,7 @@ c-----------------------------------------------------------------------
          if(ierr.ne.0) goto 999
          ifbswap = if_byte_swap_test(test,ierr)
          if(ierr.ne.0) goto 999
+         call byte_close(ierr)
 
          if (nid.eq.0) write(6,*) ' Finish reading ma2 header'
          if (ierr.eq.0) then
@@ -2015,15 +2018,17 @@ c-----------------------------------------------------------------------
       len = 4*mdw*ndw
       if (nid.gt.0.and.nid.lt.npass) msg_id=irecv(nid,wk,len)
       call nekgsync
-
-      if (nid.eq.0) write(6,*) ' Start loop'
+      
+      call nek_file_open(nekcomm,ma2fle,0,0,param(61),ma2_h,iok)
+      lma2off_b = 136
       if (nid.eq.0) then
-         if (nid.eq.0) write(6,*) ' Start reading ma2'
          eg0 = 0
          do ipass=1,npass
             eg1 = min(eg0+ndw,neli)
             nwds = (eg1 - eg0)*(mdw-1)
-            call byte_read(wk,nwds,iok)
+            count_b = int(nwds,8)*4
+            call nek_file_read(ma2_h,count_b,lma2off_b,wk,iok)
+            lma2off_b = lma2off_b+count_b
             if (iok.ne.0) goto 200
             if (ifbswap) call byte_reverse(wk,nwds,iok)
 
@@ -2049,13 +2054,23 @@ c-----------------------------------------------------------------------
             eg0 = eg1
          enddo
 c         close(80)
-         call byte_close(iok)
+c         call byte_close(iok)
          ntuple = m
-      elseif (nid.lt.npass) then
-         call msgwait(msg_id)
-         ntuple = ndw
       else
-         ntuple = 0
+         eg = 0
+         do ipass=1,npass
+            eg1 = min(eg0+ndw,neli)
+            nwds = (eg1 - eg0)*(mdw-1)
+            count_b = 0
+            call nek_file_read(ma2_h,count_b,lma2off_b,wk,iok)
+            lma2off_b = lma2off_b+int(nwds,8)*4
+         enddo
+         if (nid.lt.npass) then
+            call msgwait(msg_id)
+            ntuple = ndw
+         else
+            ntuple = 0
+         endif
       endif
 
 c     Distribute and assign partitions
