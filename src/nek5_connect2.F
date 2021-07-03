@@ -524,6 +524,9 @@ c     to remove it properly we'll have to change all the rea files.
          call exitt(1)
       ENDIF
 
+c     SET DEFAULT NUMBER OF AGGREGATOR TO 0 
+      param(61) = 0
+
       nelx   = abs(param(116))   ! check for global tensor-product structure
       nely   = abs(param(117))
       nelz   = abs(param(118))

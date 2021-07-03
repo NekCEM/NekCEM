@@ -2150,7 +2150,6 @@ c-----------------------------------------------------------------------
 
       integer nwk,nelr,nv,ierr
       integer wk(nwk)
-     
 
       logical ifbswap,if_byte_swap_test
       logical ifco2, ifcon
@@ -2166,6 +2165,10 @@ c-----------------------------------------------------------------------
       integer nvi
       integer*8 nelgti,nelgvi
       integer*8 offs, offs0
+      integer*8 count_b
+      integer co2_h
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       ierr = 0
 
@@ -2230,9 +2233,9 @@ c    1       format(a5,2i12,i2)
       if (nelgvi .ne. nelgv)
      $   call exitti('nelgt for mesh/con differs!$',0)
 
-      if (ifco2 .and. ifmpiio) then
+      if (ifco2) then
         if (nid.eq.0) call byte_close(ierr)
-        call byte_open_mpi(confle,ifh,.true.,ierr)
+        call nek_file_open(nekcomm,confle,0,0,param(61),co2_h,ierr)
         offs0 = sizeof(hdr) + sizeof(test)
 
         call lim_chk(nelr*(nvi+1),nwk,'nelr ','nwk   ','read_con  ')
@@ -2240,10 +2243,10 @@ c    1       format(a5,2i12,i2)
         nelBr = igl_running_sum(nelr) - nelr
         offs  = offs0 + int(nelBr,8)*(nvi+1)*ISIZE
 
-        call byte_set_view(offs,ifh)
-        call byte_read_mpi(wk,(nvi+1)*nelr,-1,ifh,ierr)
+        count_b = int((nvi+1)*nelr,8)*4
+        call nek_file_read(co2_h,count_b,offs,wk,ierr)
         call err_chk(ierr,' Error while reading con file!$')
-        call byte_close_mpi(ifh,ierr)
+        call nek_file_close(co2_h,ierr)
         if (ifbswap) call byte_reverse(wk,(nvi+1)*nelr,ierr)
       endif
 
