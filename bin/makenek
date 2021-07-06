@@ -32,6 +32,9 @@ LDFLAGS=""
 
 # You can always add extra flags in addition to those selected by the
 # script or by setting ARCH.
+# co2 reader options: ' -DPROCMAP -DPARRSB -DPARMETIS'
+#EXTRAFFLAGS=" -DPROCMAP -DPARRSB"
+#EXTRACFLAGS=" -DPROCMAP -DPARRSB"
 EXTRAFFLAGS=""
 EXTRACFLAGS=""
 EXTRALDFLAGS=""

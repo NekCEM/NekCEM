@@ -32,8 +32,8 @@ poly.c lob_bnd.c findpts_el_3.c findpts_el_2.c sparse_cholesky.c	\
 xxt.c fcrs.c sort.c
 JLSRC = $(patsubst %, $(JLBASE)/%, $(JLFILES))
 JLOBJ = $(patsubst $(JLBASE)/%.c, obj/%.o, $(JLSRC))
-USROBJ = obj/subuser.o
-
+CASENAME = $(basename $(USR))
+USROBJ = obj/${CASENAME}.o
 
 obj/%.o: $(NEKBASE)/%.F SIZE
 	$(FC) -c $(FFLAGS) $< -o $@
@@ -61,10 +61,11 @@ all: usr jl $(APPOBJ) $(FOBJ) $(COBJ) $(COMMOBJ)
 	echo -e "\033[0m"; \
 	fi
 
-usr: dir $(USR)
-	cp $(USR) obj/subuser.F
-	$(FC) -c obj/subuser.F -o $(USROBJ) $(FFLAGS) -I$(NEKBASE)
-	rm obj/subuser.F
+usr: ${USROBJ}
+
+${USROBJ}: ./SIZE ${USR}
+	@env CASENAME=$(CASENAME) $(NEKBASE)/mkuserfile
+	$(FC) -c ${CASENAME}.F -o $(USROBJ) $(FFLAGS) -I$(NEKBASE)
 
 jl: dir $(JLOBJ)
 
