@@ -389,7 +389,6 @@ c-----------------------------------------------------------------------
       call err_chk(ierr,' Cannot find re2 file!$')
 
       if (nid.eq.0) then
-c TODO: hardcoded byte_close
          call byte_close(ierr)
          call byte_open(fname,ierr)
          if(ierr.ne.0) goto 100
