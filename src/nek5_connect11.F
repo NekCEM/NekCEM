@@ -1972,7 +1972,9 @@ c-----------------------------------------------------------------------
       
       ierr = 0
       iok = 0
+      call izero(wk,size(wk))
       if (nid.eq.0) then
+         call byte_close(ierr)
          call byte_open(ma2fle,ierr)
          if(ierr.ne.0) goto 999
 
@@ -2072,11 +2074,11 @@ c         call byte_close(iok)
             ntuple = 0
          endif
       endif
+      call nek_file_close(ma2_h,ierr)
 
 c     Distribute and assign partitions
 
       if (nid_io.eq.0) write(6,*) 'ifgfdm',ifgfdm
-
       if (.not.ifgfdm) then
       lng = isize*neli
       call bcast(gllnid,lng)
