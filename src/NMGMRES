@@ -1,0 +1,19 @@
+c     parameter (lgmres=50) !max number of gmres iterations between restarts
+      common /gmresNT_fc/  x_NT(lx1*ly1*lz1*lelv,LDIMT-1)
+     $              , r_NT(lx1*ly1*lz1*lelv,LDIMT-1)
+     $              , w_NT(lx1*ly1*lz1*lelv,LDIMT-1)
+     $              , h_NT(lgmres,lgmres), gamma_NT(lgmres+1)
+     $              , c_NT(lgmres), s_NT(lgmres)
+      common /gmreNT1_fc/  v_NT(lx1*ly1*lz1*lelv,LDIMT-1,lgmres)
+      common /gmreNT2_fc/  z_NT(lx1*ly1*lz1*lelv,LDIMT-1,lgmres)
+      real x_NT,r_NT,w_NT,h_NT,gamma_NT,c_NT,s_NT,v_NT,z_NT
+
+c      common /spltprecNT/ ml_NT(lx1*ly1*lz1*lelv)
+c     $              ,     mu_NT(lx1*ly1*lz1*lelv)
+c      real ml_NT,mu_NT
+      
+c     w is a work vector
+c     c and s store the Givens rotations
+c     V stores the orthogonal Krylov subspace basis
+c          -1
+c     Z = M   V
